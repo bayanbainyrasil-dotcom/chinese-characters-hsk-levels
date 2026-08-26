@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="92" fill="#101216"/>
+  <rect x="68" y="68" width="376" height="376" rx="18" fill="#f4f0e6"/>
+  <path d="M256 84v344M84 256h344M92 92l328 328M420 92L92 420" stroke="#ded7c7" stroke-width="4" stroke-dasharray="14 12"/>
+  <text x="256" y="340" text-anchor="middle" font-size="232" font-family="Songti SC,STSong,SimSun,serif" fill="#c74831">写</text>
+</svg>
