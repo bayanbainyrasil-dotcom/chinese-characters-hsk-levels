@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1,user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Chinese HSK">
+  <meta name="theme-color" content="#101216">
+  <meta name="description" content="Письменный тренажёр HSK 3.0: порядок черт, ключи и 1200 официальных иероглифов для письма.">
+  <meta property="og:title" content="Chinese Characters · HSK Levels">
+  <meta property="og:description" content="HSK 3.0 handwriting trainer with 11,000 words and 1,200 official writing characters.">
+  <meta property="og:type" content="website">
+  <title>Chinese Characters · HSK Levels</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="assets/icon-180.png">
+  <link rel="stylesheet" href="styles.css?v=20260826-2">
+  <script defer src="assets/hanzi-writer.min.js?v=20260826-1"></script>
+  <script defer src="app.js?v=20260826-1"></script>
+</head>
+<body>
+  <div class="offline-banner hidden" id="offlineBanner">Офлайн-режим · уже открытые иероглифы доступны</div>
+  <main class="shell">
+    <header class="site-head">
+      <button class="brand" id="homeButton" type="button" aria-label="На главную">
+        <span class="brand-mark">汉字</span>
+        <span class="brand-copy">Chinese HSK Levels</span>
+      </button>
+      <nav class="head-actions" aria-label="Разделы сайта">
+        <button class="head-button" id="progressButton" type="button">Прогресс</button>
+        <button class="head-button" id="adminButton" type="button">Админ</button>
+      </nav>
+    </header>
+
+    <section class="view" id="homeView">
+      <div class="eyebrow">HSK 3.0 · официальный формат 2026</div>
+      <h1>Учись писать,<br><em>а не обводить.</em></h1>
+      <p class="lede">Смотри порядок черт, затем пиши сам пальцем, Apple Pencil или мышкой. Тренажёр проверяет каждое движение.</p>
+
+      <button class="continue-card hidden" id="continueCard" type="button">
+        <span><small>Продолжить</small><strong id="continueTitle">Последнее занятие</strong></span>
+        <span class="continue-arrow">→</span>
+      </button>
+
+      <div class="verified-card">
+        <span class="seal">正</span>
+        <div class="verified-copy"><strong>Проверено по официальному силлабусу</strong><span>11 000 слов · 1 200 письменных знаков</span></div>
+        <button class="mini-link" id="verificationButton" type="button">Проверка</button>
+      </div>
+
+      <div class="section-label"><span>Маршрут обучения</span><span>4 этапа</span></div>
+      <div class="stage-list" id="stageList">
+        <button class="stage-card" data-stage="strokes" type="button"><span class="stage-number">01</span><span class="stage-copy"><strong>Восемь базовых черт</strong><small>横 · 竖 · 撇 · 捺 · 点 · 提 · 折 · 钩</small></span><span class="stage-progress" data-progress="strokes">0/8</span></button>
+        <button class="stage-card" data-stage="rules" type="button"><span class="stage-number">02</span><span class="stage-copy"><strong>Порядок черт</strong><small>Шесть правил и 10 упражнений</small></span><span class="stage-progress" data-progress="rules">0/10</span></button>
+        <button class="stage-card" data-stage="radicals" type="button"><span class="stage-number">03</span><span class="stage-copy"><strong>Ключи 部首</strong><small>50 смысловых кирпичиков · 4 дня</small></span><span class="stage-progress" data-progress="radicals">0/50</span></button>
+        <button class="stage-card" data-stage="hsk" type="button"><span class="stage-number">04</span><span class="stage-copy"><strong>Письмо по HSK</strong><small>Официальные знаки уровней 1–9</small></span><span class="stage-progress" data-progress="hsk">0/1200</span></button>
+      </div>
+
+      <aside class="pencil-note"><span class="pencil-icon">⌁</span><div><strong>Рука, Apple Pencil и мышка</strong><p>Поле письма одинаково работает на iPad, телефоне и компьютере.</p></div></aside>
+    </section>
+
+    <section class="view hidden" id="verificationView">
+      <div class="view-top"><button class="text-button" data-back-home type="button">← Главная</button><span>Проверка данных</span></div>
+      <div class="eyebrow">Результат сверки</div>
+      <h2>В сайт вошёл официальный список, а не исходные 11 493 строки.</h2>
+      <p class="lede compact">Исходный Excel не совпадал с новым силлабусом. Для обучения используется официальный перечень HSK 3.0.</p>
+      <div class="audit-grid"><div class="audit-card good"><strong>11 000</strong><span>официальных слов</span></div><div class="audit-card"><strong>11 493</strong><span>строк было в Excel</span></div><div class="audit-card warning"><strong>+493</strong><span>разница в файле</span></div><div class="audit-card good"><strong>1 200</strong><span>знаков для письма</span></div></div>
+      <div class="level-audit" id="levelAudit"></div>
+      <p class="source-note">Контрольные количества: 300 · 200 · 500 · 1000 · 1600 · 1800 · 5600. Русские переводы сопоставлены с вашей таблицей.</p>
+    </section>
+
+    <section class="view hidden" id="rulesView">
+      <div class="view-top"><button class="text-button" data-back-home type="button">← Этапы</button><span>Этап 02</span></div>
+      <div class="eyebrow">六个规则 · шесть правил</div><h2>Порядок черт</h2>
+      <p class="lede compact">Прочитай правило, посмотри на знак и закрепи рукой.</p>
+      <div class="rule-list" id="ruleList"></div>
+      <button class="primary-button sticky-action" id="startRulesButton" type="button">Начать 10 упражнений</button>
+    </section>
+
+    <section class="view hidden" id="radicalsView">
+      <div class="view-top"><button class="text-button" data-back-home type="button">← Этапы</button><span>Этап 03</span></div>
+      <div class="eyebrow">部首 · ключи и компоненты</div><h2>50 кирпичиков</h2>
+      <p class="lede compact">Ключ подсказывает смысл и помогает запомнить форму. Четыре коротких дня.</p>
+      <div class="chip-row" id="radicalDays" aria-label="Дни изучения ключей"></div>
+      <div class="radical-summary"><span id="radicalDayTitle">День 1</span><strong id="radicalDayCount">13 ключей</strong></div>
+      <div class="radical-list" id="radicalList"></div>
+      <button class="primary-button sticky-action" id="startRadicalsButton" type="button">Писать ключи этого дня</button>
+    </section>
+
+    <section class="view hidden" id="hskView">
+      <div class="view-top"><button class="text-button" data-back-home type="button">← Этапы</button><span>Этап 04</span></div>
+      <div class="eyebrow">写字 · письменный минимум</div><h2>Письмо по HSK</h2>
+      <p class="lede compact">Выбери уровень. Знак считается изученным после пяти правильных написаний.</p>
+      <div class="hsk-levels" id="hskLevels"></div>
+      <div class="search-block">
+        <label class="field-label" for="vocabularySearch">Найти слово или иероглиф</label>
+        <div class="search-box"><span>⌕</span><input id="vocabularySearch" type="search" autocomplete="off" placeholder="汉字, pinyin или русский перевод"></div>
+        <div class="search-meta" id="searchMeta">Поиск по 11 000 официальных слов</div>
+        <div class="search-results" id="searchResults"></div>
+      </div>
+    </section>
+
+    <section class="view hidden" id="practiceView">
+      <div class="practice-top"><button class="text-button" id="practiceBackButton" type="button">← Назад</button><span id="practiceCount">1 / 8</span></div>
+      <div class="progress-track"><span id="progressFill"></span></div>
+      <article class="lesson-card"><div class="lesson-kicker" id="lessonKicker">Черта 1 · 横 héng</div><div class="lesson-title" id="lessonTitle">Горизонталь</div><p id="lessonHint">Проведи слева направо одним спокойным движением.</p></article>
+      <div class="writing-board" id="writingBoard"><span class="guide guide-v"></span><span class="guide guide-h"></span><span class="guide guide-a"></span><span class="guide guide-b"></span><div id="hanziTarget"></div><div class="loading" id="boardLoading">Загрузка иероглифа…</div><div class="input-badge" id="inputBadge">Палец / Pencil / мышка</div></div>
+      <div class="character-info"><span class="character" id="characterLabel">一</span><span class="pinyin" id="pinyinLabel">yī</span><span class="meaning" id="meaningLabel">один</span></div>
+      <div class="examples" id="exampleList"></div><div class="repeat-row" id="repeatRow" aria-label="Повторения"></div><div class="feedback" id="feedback" aria-live="polite">Напишите иероглиф</div>
+      <div class="action-row three"><button class="secondary-button" id="animateButton" type="button">▶ Показать</button><button class="secondary-button" id="retryButton" type="button">↻ Заново</button><button class="secondary-button" id="skipButton" type="button">Пропустить</button></div>
+      <button class="primary-button hidden" id="nextButton" type="button">Следующее упражнение</button>
+    </section>
+
+    <section class="view hidden" id="progressView">
+      <div class="view-top"><button class="text-button" data-back-home type="button">← Главная</button><span>Прогресс</span></div>
+      <div class="eyebrow">你的进步 · твой результат</div><h2>Практика письма</h2>
+      <div class="progress-hero"><strong id="totalMastered">0</strong><span>знаков изучено</span><div class="progress-ring" id="progressRing"><span id="progressPercent">0%</span></div></div>
+      <div class="metric-grid"><div><strong id="totalAttempts">0</strong><span>написаний</span></div><div><strong id="cleanAttempts">0</strong><span>без ошибок</span></div><div><strong id="practiceDays">0</strong><span>дней практики</span></div></div>
+      <div class="section-label"><span>По разделам</span><span></span></div><div class="progress-list" id="progressList"></div>
+      <button class="danger-button" id="resetProgressButton" type="button">Сбросить учебный прогресс</button>
+    </section>
+
+    <section class="view hidden" id="adminView">
+      <div class="view-top"><button class="text-button" data-back-home type="button">← Главная</button><span>Администратор</span></div>
+      <div id="adminGate"><div class="seal large">管</div><h2 id="adminGateTitle">Вход в управление</h2><p class="lede compact" id="adminGateText">Введите PIN. Он защищает ваши правки на этом устройстве.</p><form class="admin-gate-form" id="adminGateForm"><label class="field-label" for="adminPin">PIN-код</label><input class="field" id="adminPin" type="password" inputmode="numeric" minlength="4" maxlength="12" autocomplete="current-password" required placeholder="Минимум 4 цифры"><input class="field hidden" id="adminPinConfirm" type="password" inputmode="numeric" minlength="4" maxlength="12" autocomplete="new-password" placeholder="Повторите PIN"><div class="form-message" id="adminGateMessage"></div><button class="primary-button" id="adminGateSubmit" type="submit">Войти</button></form></div>
+      <div class="hidden" id="adminPanel">
+        <div class="admin-title-row"><div><div class="eyebrow">Локальный редактор</div><h2>Материалы сайта</h2></div><button class="text-button" id="adminLockButton" type="button">Закрыть</button></div>
+        <div class="admin-stats"><div><strong>11 000</strong><span>базовых слов</span></div><div><strong id="adminChangeCount">0</strong><span>ваших изменений</span></div><div><strong>1 200</strong><span>письменных знаков</span></div></div>
+        <div class="cloud-card"><span>✓</span><div><strong>Правки хранятся на вашем устройстве</strong><p>Можно экспортировать копию и перенести её на iPad или другой компьютер.</p></div></div>
+        <div class="admin-tools"><button class="secondary-button" id="newWordButton" type="button">＋ Добавить</button><button class="secondary-button" id="exportAdminButton" type="button">⇩ Копия</button><label class="secondary-button file-button">⇧ Импорт<input id="importAdminInput" type="file" accept="application/json,.json"></label></div>
+        <label class="field-label" for="adminSearch">Найти слово для изменения</label><div class="search-box"><span>⌕</span><input id="adminSearch" type="search" autocomplete="off" placeholder="Например: 学习 или учиться"></div><div class="search-results admin-results" id="adminSearchResults"></div>
+        <form class="editor-card hidden" id="wordEditor"><div class="editor-head"><strong id="editorTitle">Новое слово</strong><button class="text-button" id="closeEditorButton" type="button">Закрыть</button></div><input id="editorBaseNumber" type="hidden"><div class="form-grid two"><label><span class="field-label">Уровень</span><select class="field" id="editorLevel" required><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option value="7-9">7–9</option></select></label><label><span class="field-label">Иероглифы</span><input class="field" id="editorWord" required maxlength="30" placeholder="汉字"></label></div><label><span class="field-label">Pinyin</span><input class="field" id="editorPinyin" maxlength="80" placeholder="hànzì"></label><label><span class="field-label">Часть речи</span><input class="field" id="editorPos" maxlength="40" placeholder="名 / 动 / 形"></label><label><span class="field-label">Русский перевод</span><textarea class="field" id="editorRussian" rows="3" maxlength="500" required placeholder="Перевод"></textarea></label><div class="form-message" id="editorMessage"></div><button class="primary-button" type="submit">Сохранить</button><button class="danger-button hidden" id="deleteCustomButton" type="button">Удалить пользовательскую запись</button></form>
+        <div class="section-label"><span>Последние изменения</span><span id="adminListCount">0</span></div><div class="change-list" id="adminChangeList"></div>
+      </div>
+    </section>
+  </main>
+  <div class="toast hidden" id="toast" role="status" aria-live="polite"></div>
+</body>
+</html>

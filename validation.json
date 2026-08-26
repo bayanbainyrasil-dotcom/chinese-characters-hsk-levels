@@ -1,0 +1,27 @@
+{
+  "ok": true,
+  "errors": [],
+  "vocabulary": 11000,
+  "vocabularyCounts": {
+    "1": 300,
+    "2": 200,
+    "3": 500,
+    "4": 1000,
+    "5": 1600,
+    "6": 1800,
+    "7-9": 5600
+  },
+  "writingCharacters": 1200,
+  "writingCounts": {
+    "3": 150,
+    "4": 150,
+    "5": 150,
+    "6": 150,
+    "1-2": 100,
+    "7-9": 500
+  },
+  "translationCoverage": "11000/11000",
+  "htmlIds": 86,
+  "referencedIds": 77,
+  "pwa": "standalone"
+}

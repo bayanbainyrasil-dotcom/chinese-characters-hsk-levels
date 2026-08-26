@@ -1,0 +1,17 @@
+{
+  "name": "Chinese Characters · HSK Levels",
+  "short_name": "Chinese HSK",
+  "description": "Письменный тренажёр HSK 3.0 для руки, Apple Pencil и мышки.",
+  "lang": "ru",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#101216",
+  "theme_color": "#101216",
+  "icons": [
+    { "src": "assets/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" },
+    { "src": "assets/icon-180.png", "sizes": "180x180", "type": "image/png" },
+    { "src": "assets/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

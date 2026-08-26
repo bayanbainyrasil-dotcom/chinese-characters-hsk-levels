@@ -1,0 +1,56 @@
+{
+  "ok": true,
+  "generatedAt": "2026-08-26T16:25:20.139Z",
+  "errors": [],
+  "warnings": [],
+  "vocabulary": {
+    "official": 11000,
+    "site": 11000,
+    "exactSequenceMatches": 11000,
+    "levelCounts": {
+      "1": 300,
+      "2": 200,
+      "3": 500,
+      "4": 1000,
+      "5": 1600,
+      "6": 1800,
+      "7-9": 5600
+    },
+    "officialPinyinMatches": 11000,
+    "officialPartOfSpeechMatches": 11000,
+    "russianTranslationsPresent": 11000,
+    "duplicateNumbers": 0,
+    "firstSequenceMismatches": [],
+    "firstPinyinMismatches": [],
+    "firstPartOfSpeechMismatches": []
+  },
+  "writing": {
+    "official": 1200,
+    "site": 1200,
+    "unique": 1200,
+    "exactSequenceMatches": 1200,
+    "levelCounts": {
+      "3": 150,
+      "4": 150,
+      "5": 150,
+      "6": 150,
+      "1-2": 100,
+      "7-9": 500
+    },
+    "charactersWithExamples": 1200,
+    "strokeData": {
+      "checked": true,
+      "total": 1200,
+      "passed": 1200,
+      "failed": []
+    }
+  },
+  "admin": {
+    "pin2007Configured": true,
+    "addWord": true,
+    "editWord": true,
+    "exportBackup": true,
+    "importBackup": true,
+    "deleteCustomWord": true
+  }
+}
