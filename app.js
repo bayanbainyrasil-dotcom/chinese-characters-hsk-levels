@@ -105,7 +105,11 @@
     currentView = id;
     VIEW_IDS.forEach((viewId) => $(viewId).classList.toggle("hidden", viewId !== id));
     document.body.dataset.view = id;
+    document.body.classList.toggle("practice-mode", id === "practiceView");
+    document.documentElement.classList.toggle("practice-mode", id === "practiceView");
+    if (id === "practiceView") syncViewportHeight();
     window.scrollTo({ top: 0, behavior: "auto" });
+    $("practiceScroll")?.scrollTo({ top: 0, behavior: "auto" });
     if (id === "homeView") renderHomeProgress();
     if (id === "progressView") renderProgressView();
   }
@@ -375,7 +379,10 @@
 
   function syncViewportHeight() {
     const height = window.visualViewport?.height || window.innerHeight || 0;
-    if (height > 0) document.documentElement.style.setProperty("--vh", `${height / 100}px`);
+    if (height > 0) {
+      document.documentElement.style.setProperty("--vh", `${height / 100}px`);
+      document.documentElement.style.setProperty("--app-h", `${height}px`);
+    }
   }
 
   function handleViewportChange() {

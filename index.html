@@ -29,9 +29,9 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="assets/icon-180.png">
-  <link rel="stylesheet" href="styles.css?v=20260828-2">
+  <link rel="stylesheet" href="styles.css?v=20260828-3">
   <script defer src="assets/hanzi-writer.min.js?v=20260826-1"></script>
-  <script defer src="app.js?v=20260828-2"></script>
+  <script defer src="app.js?v=20260828-3"></script>
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -152,13 +152,18 @@
       <div class="practice-top"><button class="text-button" id="practiceBackButton" type="button">← Назад</button><span id="practiceCount">1 / 8</span></div>
       <div class="progress-track"><span id="progressFill"></span></div>
       <div class="practice-layout">
-        <article class="lesson-card"><div class="lesson-kicker" id="lessonKicker">Черта 1 · 横 héng</div><div class="lesson-title" id="lessonTitle">Горизонталь</div><p id="lessonHint">Проведи слева направо одним спокойным движением.</p></article>
-        <div class="board-wrap" id="boardWrap">
-          <div class="writing-board" id="writingBoard"><span class="guide guide-v"></span><span class="guide guide-h"></span><span class="guide guide-a"></span><span class="guide guide-b"></span><div id="hanziTarget"></div><div class="loading" id="boardLoading">Загрузка иероглифа…</div><div class="input-badge" id="inputBadge">Палец / Pencil / мышка</div></div>
+        <div class="practice-scroll" id="practiceScroll">
+          <article class="lesson-card"><div class="lesson-kicker" id="lessonKicker">Черта 1 · 横 héng</div><div class="lesson-title" id="lessonTitle">Горизонталь</div><p id="lessonHint">Проведи слева направо одним спокойным движением.</p></article>
+          <div class="board-wrap" id="boardWrap">
+            <div class="writing-board" id="writingBoard"><span class="guide guide-v"></span><span class="guide guide-h"></span><span class="guide guide-a"></span><span class="guide guide-b"></span><div id="hanziTarget"></div><div class="loading" id="boardLoading">Загрузка иероглифа…</div><div class="input-badge" id="inputBadge">Палец / Pencil / мышка</div></div>
+          </div>
+          <div class="practice-side">
+            <div class="character-info"><span class="character" id="characterLabel">一</span><span class="pinyin" id="pinyinLabel">yī</span><span class="meaning" id="meaningLabel">один</span></div>
+            <div class="examples" id="exampleList"></div><div class="repeat-row" id="repeatRow" aria-label="Повторения"></div>
+          </div>
         </div>
-        <div class="practice-side">
-          <div class="character-info"><span class="character" id="characterLabel">一</span><span class="pinyin" id="pinyinLabel">yī</span><span class="meaning" id="meaningLabel">один</span></div>
-          <div class="examples" id="exampleList"></div><div class="repeat-row" id="repeatRow" aria-label="Повторения"></div><div class="feedback" id="feedback" aria-live="polite">Напишите иероглиф</div>
+        <div class="practice-bottom">
+          <div class="feedback" id="feedback" aria-live="polite">Напишите иероглиф</div>
           <div class="action-row three"><button class="secondary-button" id="animateButton" type="button">▶ Показать</button><button class="secondary-button" id="retryButton" type="button">↻ Заново</button><button class="secondary-button" id="skipButton" type="button">Пропустить</button></div>
           <button class="primary-button hidden" id="nextButton" type="button">Следующее упражнение</button>
         </div>

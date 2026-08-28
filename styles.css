@@ -196,6 +196,7 @@ h2 { margin: 0 0 10px; font: 400 clamp(29px, 8vw, 38px)/1.08 Georgia, serif; let
   grid-template-columns: minmax(0, 1fr);
   grid-template-areas: "lesson" "board" "side";
 }
+.practice-scroll, .practice-bottom { display: contents; }
 .lesson-card { grid-area: lesson; min-height: 67px; margin: 0; }
 .board-wrap { grid-area: board; display: flex; justify-content: center; align-items: flex-start; min-width: 0; }
 .practice-side { grid-area: side; min-width: 0; }
@@ -401,4 +402,96 @@ textarea.field { resize: vertical; }
 
 @media (prefers-reduced-motion: reduce) {
   * { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+}
+
+html.practice-mode,
+body.practice-mode {
+  height: var(--app-h);
+  min-height: var(--app-h);
+  overflow: hidden;
+}
+body.practice-mode .app { height: 100%; min-height: 0; overflow: hidden; }
+body.practice-mode .shell { min-height: 0; }
+
+/* Телефон и iPad в портрете: тренажёр работает как один экран приложения.
+   Вся страница закреплена, прокручивается только содержимое между прогрессом и кнопками. */
+@media (max-width: 899px) and (orientation: portrait) {
+  body.practice-mode .app {
+    padding-top: calc(var(--safe-t) + 8px);
+    padding-bottom: 0;
+  }
+  body.practice-mode .shell {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+  }
+  body.practice-mode .site-head { display: none; }
+  body.practice-mode #practiceView {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    min-height: 0;
+    animation: none;
+  }
+  body.practice-mode .practice-top,
+  body.practice-mode .progress-track { flex: 0 0 auto; }
+  body.practice-mode .progress-track { margin-bottom: 10px; }
+  body.practice-mode .practice-layout {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    min-height: 0;
+    gap: 0;
+  }
+  body.practice-mode .practice-scroll {
+    display: block;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    touch-action: pan-y;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 8px;
+    -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 22px), transparent 100%);
+    mask-image: linear-gradient(to bottom, #000 calc(100% - 22px), transparent 100%);
+  }
+  body.practice-mode .practice-scroll::-webkit-scrollbar { display: none; }
+  body.practice-mode .practice-bottom {
+    display: block;
+    flex: 0 0 auto;
+    padding-top: 8px;
+    padding-bottom: calc(var(--safe-b) + 6px);
+    border-top: 1px solid var(--line);
+    background: var(--bg);
+  }
+  body.practice-mode .lesson-card { min-height: 0; margin-bottom: 10px; }
+  body.practice-mode .writing-board {
+    width: min(100%, 410px, max(190px, calc(var(--app-h) - 400px)));
+  }
+  body.practice-mode .practice-side { position: static; }
+  body.practice-mode .character-info { min-height: 0; margin-top: 12px; }
+  body.practice-mode .feedback { margin-bottom: 6px; }
+  body.practice-mode .action-row { margin-top: 0; }
+  body.practice-mode #nextButton { margin-top: 8px; }
+}
+
+/* На широком экране и в альбоме новые обёртки растворяются:
+   прежняя двухколоночная раскладка остаётся без мобильных ограничений. */
+@media (min-width: 900px), (orientation: landscape) and (max-height: 500px) {
+  .practice-layout {
+    grid-template-rows: repeat(5, auto);
+    grid-template-areas:
+      "board lesson"
+      "board side"
+      "board feedback"
+      "board actions"
+      "board next";
+    align-content: start;
+  }
+  .practice-layout .feedback { grid-area: feedback; text-align: left; }
+  .practice-layout .action-row { grid-area: actions; }
+  .practice-layout #nextButton { grid-area: next; }
 }
