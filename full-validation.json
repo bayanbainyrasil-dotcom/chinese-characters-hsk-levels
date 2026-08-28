@@ -46,7 +46,7 @@
     }
   },
   "admin": {
-    "pin2007Configured": true,
+    "pinHashConfigured": true,
     "addWord": true,
     "editWord": true,
     "exportBackup": true,
