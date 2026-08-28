@@ -2,25 +2,71 @@
 <html lang="ru">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1,user-scalable=no">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="color-scheme" content="dark">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Chinese HSK">
   <meta name="theme-color" content="#101216">
-  <meta name="description" content="Письменный тренажёр HSK 3.0: порядок черт, ключи и 1200 официальных иероглифов для письма.">
+  <meta name="description" content="Бесплатный тренажёр китайских иероглифов HSK 3.0: порядок черт, письмо пальцем и Apple Pencil, 11 000 слов и 1 200 знаков.">
+  <meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1">
+  <meta name="googlebot" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1">
   <meta property="og:title" content="Chinese Characters · HSK Levels">
-  <meta property="og:description" content="HSK 3.0 handwriting trainer with 11,000 words and 1,200 official writing characters.">
+  <meta property="og:description" content="Free HSK 3.0 Chinese character handwriting trainer with 11,000 words and 1,200 writing characters.">
   <meta property="og:type" content="website">
+  <meta property="og:url" content="https://bayanbainyrasil-dotcom.github.io/chinese-characters-hsk-levels/">
+  <meta property="og:site_name" content="Chinese Characters · HSK Levels">
+  <meta property="og:locale" content="ru_RU">
+  <meta property="og:image" content="https://bayanbainyrasil-dotcom.github.io/chinese-characters-hsk-levels/assets/icon-512.png">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Chinese Characters · HSK Levels">
+  <meta name="twitter:description" content="Free HSK 3.0 Chinese character handwriting trainer.">
+  <meta name="twitter:image" content="https://bayanbainyrasil-dotcom.github.io/chinese-characters-hsk-levels/assets/icon-512.png">
   <title>Chinese Characters · HSK Levels</title>
+  <link rel="canonical" href="https://bayanbainyrasil-dotcom.github.io/chinese-characters-hsk-levels/">
+  <link rel="sitemap" type="application/xml" href="sitemap.xml">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="assets/icon-180.png">
-  <link rel="stylesheet" href="styles.css?v=20260826-2">
+  <link rel="stylesheet" href="styles.css?v=20260828-1">
   <script defer src="assets/hanzi-writer.min.js?v=20260826-1"></script>
-  <script defer src="app.js?v=20260826-1"></script>
+  <script defer src="app.js?v=20260828-1"></script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebSite",
+        "@id": "https://bayanbainyrasil-dotcom.github.io/chinese-characters-hsk-levels/#website",
+        "url": "https://bayanbainyrasil-dotcom.github.io/chinese-characters-hsk-levels/",
+        "name": "Chinese Characters · HSK Levels",
+        "alternateName": ["Chinese HSK", "汉字 HSK"],
+        "description": "Бесплатный тренажёр письма китайских иероглифов HSK 3.0.",
+        "inLanguage": "ru"
+      },
+      {
+        "@type": "SoftwareApplication",
+        "@id": "https://bayanbainyrasil-dotcom.github.io/chinese-characters-hsk-levels/#app",
+        "name": "Chinese Characters · HSK Levels",
+        "url": "https://bayanbainyrasil-dotcom.github.io/chinese-characters-hsk-levels/",
+        "applicationCategory": "EducationalApplication",
+        "operatingSystem": "Any",
+        "description": "HSK 3.0 Chinese character handwriting trainer for finger, Apple Pencil and mouse.",
+        "inLanguage": "ru",
+        "isAccessibleForFree": true,
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        }
+      }
+    ]
+  }
+  </script>
 </head>
 <body>
   <div class="offline-banner hidden" id="offlineBanner">Офлайн-режим · уже открытые иероглифы доступны</div>
+  <div class="app">
   <main class="shell">
     <header class="site-head">
       <button class="brand" id="homeButton" type="button" aria-label="На главную">
@@ -104,12 +150,18 @@
     <section class="view hidden" id="practiceView">
       <div class="practice-top"><button class="text-button" id="practiceBackButton" type="button">← Назад</button><span id="practiceCount">1 / 8</span></div>
       <div class="progress-track"><span id="progressFill"></span></div>
-      <article class="lesson-card"><div class="lesson-kicker" id="lessonKicker">Черта 1 · 横 héng</div><div class="lesson-title" id="lessonTitle">Горизонталь</div><p id="lessonHint">Проведи слева направо одним спокойным движением.</p></article>
-      <div class="writing-board" id="writingBoard"><span class="guide guide-v"></span><span class="guide guide-h"></span><span class="guide guide-a"></span><span class="guide guide-b"></span><div id="hanziTarget"></div><div class="loading" id="boardLoading">Загрузка иероглифа…</div><div class="input-badge" id="inputBadge">Палец / Pencil / мышка</div></div>
-      <div class="character-info"><span class="character" id="characterLabel">一</span><span class="pinyin" id="pinyinLabel">yī</span><span class="meaning" id="meaningLabel">один</span></div>
-      <div class="examples" id="exampleList"></div><div class="repeat-row" id="repeatRow" aria-label="Повторения"></div><div class="feedback" id="feedback" aria-live="polite">Напишите иероглиф</div>
-      <div class="action-row three"><button class="secondary-button" id="animateButton" type="button">▶ Показать</button><button class="secondary-button" id="retryButton" type="button">↻ Заново</button><button class="secondary-button" id="skipButton" type="button">Пропустить</button></div>
-      <button class="primary-button hidden" id="nextButton" type="button">Следующее упражнение</button>
+      <div class="practice-layout">
+        <article class="lesson-card"><div class="lesson-kicker" id="lessonKicker">Черта 1 · 横 héng</div><div class="lesson-title" id="lessonTitle">Горизонталь</div><p id="lessonHint">Проведи слева направо одним спокойным движением.</p></article>
+        <div class="board-wrap" id="boardWrap">
+          <div class="writing-board" id="writingBoard"><span class="guide guide-v"></span><span class="guide guide-h"></span><span class="guide guide-a"></span><span class="guide guide-b"></span><div id="hanziTarget"></div><div class="loading" id="boardLoading">Загрузка иероглифа…</div><div class="input-badge" id="inputBadge">Палец / Pencil / мышка</div></div>
+        </div>
+        <div class="practice-side">
+          <div class="character-info"><span class="character" id="characterLabel">一</span><span class="pinyin" id="pinyinLabel">yī</span><span class="meaning" id="meaningLabel">один</span></div>
+          <div class="examples" id="exampleList"></div><div class="repeat-row" id="repeatRow" aria-label="Повторения"></div><div class="feedback" id="feedback" aria-live="polite">Напишите иероглиф</div>
+          <div class="action-row three"><button class="secondary-button" id="animateButton" type="button">▶ Показать</button><button class="secondary-button" id="retryButton" type="button">↻ Заново</button><button class="secondary-button" id="skipButton" type="button">Пропустить</button></div>
+          <button class="primary-button hidden" id="nextButton" type="button">Следующее упражнение</button>
+        </div>
+      </div>
     </section>
 
     <section class="view hidden" id="progressView">
@@ -135,6 +187,7 @@
       </div>
     </section>
   </main>
+  </div>
   <div class="toast hidden" id="toast" role="status" aria-live="polite"></div>
 </body>
 </html>

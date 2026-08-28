@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://bayanbainyrasil-dotcom.github.io/chinese-characters-hsk-levels/sitemap.xml

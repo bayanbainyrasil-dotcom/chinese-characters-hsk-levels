@@ -1,4 +1,4 @@
-const SHELL_CACHE = "bishun-shell-v8";
+const SHELL_CACHE = "bishun-shell-v10";
 const CHARACTER_CACHE = "bishun-characters-v1";
 const SHELL = [
   "./",

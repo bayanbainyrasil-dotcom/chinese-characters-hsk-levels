@@ -77,6 +77,8 @@
   let adminUnlocked = false;
   let toastTimer = null;
   let resizeTimer = null;
+  let lastBoardSize = 0;
+  let boardObserver = null;
 
   function loadJson(key, fallback) {
     try {
@@ -102,6 +104,7 @@
     previousView = currentView;
     currentView = id;
     VIEW_IDS.forEach((viewId) => $(viewId).classList.toggle("hidden", viewId !== id));
+    document.body.dataset.view = id;
     window.scrollTo({ top: 0, behavior: "auto" });
     if (id === "homeView") renderHomeProgress();
     if (id === "progressView") renderProgressView();
@@ -347,6 +350,50 @@
     }
   }
 
+  function boardSize() {
+    const rect = $("writingBoard").getBoundingClientRect();
+    return Math.max(200, Math.round(rect.width || 0));
+  }
+
+  function boardPadding(size) {
+    return Math.max(10, Math.round(size * 0.045));
+  }
+
+  // Поворот и ресайз: меняем размер SVG у hanzi-writer, не пересоздавая его,
+  // чтобы уже написанные черты не сбрасывались и не съезжали.
+  function syncWriterSize() {
+    if (!writer || currentView !== "practiceView") return;
+    const size = boardSize();
+    if (!size || Math.abs(size - lastBoardSize) < 2) return;
+    lastBoardSize = size;
+    try {
+      writer.updateDimensions({ width: size, height: size, padding: boardPadding(size) });
+    } catch (_) {
+      if (currentItem()) renderPracticeItem();
+    }
+  }
+
+  function syncViewportHeight() {
+    const height = window.visualViewport?.height || window.innerHeight || 0;
+    if (height > 0) document.documentElement.style.setProperty("--vh", `${height / 100}px`);
+  }
+
+  function handleViewportChange() {
+    syncViewportHeight();
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(syncWriterSize, 120);
+  }
+
+  function observeBoard() {
+    const board = $("writingBoard");
+    if (!board || boardObserver || typeof ResizeObserver !== "function") return;
+    boardObserver = new ResizeObserver(() => {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(syncWriterSize, 60);
+    });
+    boardObserver.observe(board);
+  }
+
   function buildWriter(character) {
     writerToken += 1;
     const token = writerToken;
@@ -362,13 +409,14 @@
       $("boardLoading").textContent = "Библиотека письма не загрузилась";
       return;
     }
-    const size = Math.max(260, Math.floor($("writingBoard").getBoundingClientRect().width));
+    const size = boardSize();
+    lastBoardSize = size;
     try {
       writer = HanziWriter.create(target, character, {
-        width: size, height: size, padding: 18,
+        width: size, height: size, padding: boardPadding(size),
         showCharacter: false, showOutline: true,
         strokeColor: "#17191d", outlineColor: "#d8d0be",
-        drawingColor: "#c74831", drawingWidth: 22,
+        drawingColor: "#c74831", drawingWidth: Math.max(14, Math.round(size / 18)),
         highlightColor: "#3aa875", highlightCompleteColor: "#3aa875",
         strokeAnimationSpeed: .9, delayBetweenStrokes: 180,
         showHintAfterMisses: 2, highlightOnComplete: true,
@@ -760,10 +808,9 @@
       const label = event.pointerType === "pen" ? "Apple Pencil" : event.pointerType === "mouse" ? "Мышка" : "Палец";
       $("inputBadge").textContent = label;
     }, { passive: true });
-    window.addEventListener("resize", () => {
-      clearTimeout(resizeTimer);
-      resizeTimer = setTimeout(() => { if (currentView === "practiceView" && currentItem()) renderPracticeItem(); }, 240);
-    });
+    window.addEventListener("resize", handleViewportChange);
+    window.addEventListener("orientationchange", () => setTimeout(handleViewportChange, 160));
+    window.visualViewport?.addEventListener("resize", handleViewportChange);
     window.addEventListener("online", updateOfflineState);
     window.addEventListener("offline", updateOfflineState);
   }
@@ -776,7 +823,9 @@
     progress.completed ||= { strokes: {}, rules: {}, radicals: {}, hsk: {} };
     progress.completed.strokes ||= {}; progress.completed.rules ||= {}; progress.completed.radicals ||= {}; progress.completed.hsk ||= {};
     progress.days ||= [];
+    syncViewportHeight();
     wireEvents();
+    observeBoard();
     renderHomeProgress();
     renderRadicalDays();
     renderRadicals();
