@@ -1,0 +1,6 @@
+{
+  "note": "Список готовых записей. Создаётся скриптом tools/generate-audio.mjs.",
+  "voice": null,
+  "generatedAt": null,
+  "ids": []
+}

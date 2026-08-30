@@ -1,5 +1,6 @@
-const SHELL_CACHE = "bishun-shell-v12";
+const SHELL_CACHE = "bishun-shell-v15";
 const CHARACTER_CACHE = "bishun-characters-v1";
+const AUDIO_CACHE = "bishun-audio-v1";
 const SHELL = [
   "./",
   "index.html",
@@ -12,16 +13,36 @@ const SHELL = [
   "assets/hanzi-writer.min.js",
   "data/verification.json",
   "data/writing.json",
-  "data/vocabulary.json"
+  "data/characters.json",
+  "js/config.js",
+  "js/storage.js",
+  "js/progress.js",
+  "js/pinyin.js",
+  "js/dictionary.js",
+  "js/motion.js",
+  "js/audio.js",
+  "js/wordcard.js",
+  "js/admin.js",
+  "js/sync.js"
 ];
 
 self.addEventListener("install", (event) => {
-  event.waitUntil(caches.open(SHELL_CACHE).then((cache) => cache.addAll(SHELL)).then(() => self.skipWaiting()));
+  // Кладём файлы по одному: один недоступный файл не должен ронять всю установку.
+  event.waitUntil(
+    caches.open(SHELL_CACHE)
+      .then((cache) => Promise.all(SHELL.map((path) => cache.add(path).catch(() => null))))
+      .then(() => self.skipWaiting()),
+  );
 });
 
 self.addEventListener("activate", (event) => {
   event.waitUntil(
-    caches.keys().then((keys) => Promise.all(keys.filter((key) => ![SHELL_CACHE, CHARACTER_CACHE].includes(key)).map((key) => caches.delete(key)))).then(() => self.clients.claim())
+    // Пользовательские данные живут в localStorage, кэш чистим только свой и по имени.
+    caches.keys()
+      .then((keys) => Promise.all(keys
+        .filter((key) => key.startsWith("bishun-") && ![SHELL_CACHE, CHARACTER_CACHE, AUDIO_CACHE].includes(key))
+        .map((key) => caches.delete(key))))
+      .then(() => self.clients.claim())
   );
 });
 
@@ -29,6 +50,27 @@ self.addEventListener("fetch", (event) => {
   const request = event.request;
   if (request.method !== "GET") return;
   const url = new URL(request.url);
+
+  // Аудио: сначала кэш, затем сеть. Записи не меняются, поэтому это безопасно.
+  if (url.origin === self.location.origin && url.pathname.includes("/audio/")) {
+    event.respondWith(
+      caches.open(AUDIO_CACHE).then(async (cache) => {
+        const cached = await cache.match(request);
+        if (cached) return cached;
+        try {
+          const response = await fetch(request);
+          if (response.ok) cache.put(request, response.clone());
+          return response;
+        } catch (error) {
+          return cached || Response.error();
+        }
+      }),
+    );
+    return;
+  }
+
+  // Запросы к Supabase через сервис-воркер не проходят: они всегда идут в сеть.
+  if (url.origin !== self.location.origin && !url.hostname.endsWith("jsdelivr.net")) return;
 
   if (url.hostname === "cdn.jsdelivr.net" && url.pathname.includes("hanzi-writer-data")) {
     event.respondWith(
