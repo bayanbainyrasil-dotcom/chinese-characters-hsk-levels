@@ -359,6 +359,24 @@ test("админ-раздел не проверяет пароль в брауз
   await context.close();
 });
 
+test("ошибки входа показываются по-русски", async () => {
+  const { context, page } = await open();
+  await page.evaluate(() => window.__hsk.showView("settingsView"));
+  const cases = [
+    [{ message: "User already registered", code: "user_already_exists" }, /уже зарегистрирована/i],
+    [{ message: "Invalid login credentials" }, /Неверная почта или пароль/i],
+    [{ message: "Password should be at least 6 characters." }, /от 6 символов/i],
+    [{ message: "Unable to validate email address: invalid format" }, /опечатка/i],
+    [{ message: "Failed to fetch" }, /Нет связи с сервером/i],
+  ];
+  for (const [error, expected] of cases) {
+    const text = await page.evaluate((e) => window.__hsk.authErrorText(e), error);
+    assert.match(text, expected, `для «${error.message}» получили «${text}»`);
+    assert.ok(!/[a-z]{4,}/i.test(text.replace(/[а-яё]/gi, "")), `в тексте осталась латиница: ${text}`);
+  }
+  await context.close();
+});
+
 test("кнопка Google появляется только если провайдер включён на сервере", async () => {
   const off = await open({ google: false });
   await off.page.evaluate(() => window.__hsk.showView("settingsView"));

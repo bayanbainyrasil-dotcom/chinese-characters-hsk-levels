@@ -192,7 +192,10 @@ export class SyncEngine extends Emitter {
       email, password, options: { emailRedirectTo: redirectTo },
     });
     if (error) throw error;
-    return data.user;
+    // Если подтверждение почты выключено, Supabase сразу отдаёт сессию.
+    // Отличать эти два случая обязательно: иначе экран просит проверить почту,
+    // куда письмо не придёт.
+    return { user: data.user, session: data.session, needsConfirmation: Boolean(data.user) && !data.session };
   }
 
   async sendMagicLink(email) {

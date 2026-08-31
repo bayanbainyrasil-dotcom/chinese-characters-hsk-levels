@@ -1087,16 +1087,41 @@ async function handleAuthAction(action) {
     }
     if (!password || password.length < 6) { message.textContent = "Пароль от 6 символов"; return; }
     if (action === "signup") {
-      await sync.signUpWithPassword(email, password);
-      message.textContent = "Проверьте почту и подтвердите адрес";
+      const result = await sync.signUpWithPassword(email, password);
+      message.textContent = result?.needsConfirmation
+        ? "Проверьте почту и подтвердите адрес"
+        : "Аккаунт создан, вход выполнен";
       return;
     }
     await sync.signInWithPassword(email, password);
     message.textContent = "Вход выполнен";
   } catch (error) {
     message.className = "form-message error";
-    message.textContent = error?.message || "Не удалось войти";
+    message.textContent = authErrorText(error);
   }
+}
+
+/**
+ * Supabase отвечает по-английски. Показывать это в русском интерфейсе —
+ * значит оставить человека гадать, что он сделал не так.
+ */
+function authErrorText(error) {
+  const code = error?.code || error?.name || "";
+  const raw = String(error?.message || "");
+  const table = [
+    [/already registered|already been registered|user_already_exists/i, "Такая почта уже зарегистрирована — нажмите «Войти»"],
+    [/invalid login credentials|invalid_credentials/i, "Неверная почта или пароль"],
+    [/password should be at least|weak_password/i, "Пароль слишком короткий — нужно от 6 символов"],
+    [/unable to validate email|invalid format|email_address_invalid/i, "Проверьте адрес почты — похоже, в нём опечатка"],
+    [/email not confirmed|email_not_confirmed/i, "Адрес почты ещё не подтверждён"],
+    [/rate limit|over_email_send_rate_limit|too many/i, "Слишком много попыток подряд — подождите минуту"],
+    [/signups not allowed|signup_disabled/i, "Регистрация сейчас закрыта"],
+    [/failed to fetch|networkerror|load failed/i, "Нет связи с сервером — проверьте интернет"],
+  ];
+  for (const [pattern, text] of table) {
+    if (pattern.test(raw) || pattern.test(code)) return text;
+  }
+  return raw || "Не удалось войти";
 }
 
 // --- события --------------------------------------------------------------
@@ -1251,4 +1276,5 @@ window.__hsk = {
   completeCurrentItem: (mistakes = 0) => completeCurrentItem(mistakes),
   showView,
   backendReady,
+  authErrorText,
 };
