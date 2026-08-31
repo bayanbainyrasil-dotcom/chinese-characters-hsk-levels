@@ -836,6 +836,19 @@ function renderSettings() {
   $("signInBlock").classList.toggle("hidden", sync.signedIn || !backendOn);
   $("backendOffBlock").classList.toggle("hidden", sync.signedIn || backendOn);
   $("signOutBlock").classList.toggle("hidden", !sync.signedIn);
+  if (backendOn && !sync.signedIn) applyProviderVisibility();
+}
+
+/**
+ * Кнопка Google показывается, только если провайдер действительно включён на
+ * сервере. Иначе она бы вела на страницу ошибки Supabase. Как только Google
+ * подключат в проекте, кнопка появится сама — править код не придётся.
+ */
+function applyProviderVisibility() {
+  sync.providers().then((available) => {
+    $("authGoogle").classList.toggle("hidden", !available.google);
+    $("authMagicLink").classList.toggle("hidden", !available.otp);
+  }).catch(() => {});
 }
 
 function updateSyncBadge({ status }) {

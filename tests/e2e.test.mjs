@@ -23,14 +23,14 @@ after(async () => {
   server?.close();
 });
 
-async function open({ viewport = { width: 1280, height: 900 }, legacy = null, reducedMotion = null, isMobile = false } = {}) {
+async function open({ viewport = { width: 1280, height: 900 }, legacy = null, reducedMotion = null, isMobile = false, google = true } = {}) {
   const context = await browser.newContext({
     viewport, reducedMotion: reducedMotion || undefined,
     hasTouch: isMobile, isMobile,
     deviceScaleFactor: isMobile ? 2 : 1,
   });
   await serveStrokeData(context);
-  await stubBackend(context);
+  await stubBackend(context, { google });
   const page = await context.newPage();
   const errors = collectErrors(page);
   if (legacy) {
@@ -357,6 +357,21 @@ test("админ-раздел не проверяет пароль в брауз
   assert.equal(await page.locator("#adminPanel").isVisible(), false);
   assert.equal(await page.locator("#adminGate").isVisible(), true);
   await context.close();
+});
+
+test("кнопка Google появляется только если провайдер включён на сервере", async () => {
+  const off = await open({ google: false });
+  await off.page.evaluate(() => window.__hsk.showView("settingsView"));
+  await off.page.waitForFunction(() => document.getElementById("authGoogle").classList.contains("hidden"));
+  assert.equal(await off.page.locator("#authGoogle").isVisible(), false);
+  assert.equal(await off.page.locator("#authSignIn").isVisible(), true, "вход по почте должен остаться");
+  await off.context.close();
+
+  const on = await open({ google: true });
+  await on.page.evaluate(() => window.__hsk.showView("settingsView"));
+  await on.page.waitForFunction(() => !document.getElementById("authGoogle").classList.contains("hidden"));
+  assert.equal(await on.page.locator("#authGoogle").isVisible(), true);
+  await on.context.close();
 });
 
 test("без бэкенда вместо нерабочих кнопок входа показывается пояснение", async () => {

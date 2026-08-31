@@ -65,10 +65,40 @@ export class SyncEngine extends Emitter {
     this.flushTimer = null;
     this.busy = false;
     this.started = false;
+    this.providerCache = null;
+    this.providerPromise = null;
   }
 
   get enabled() { return backendReady(); }
   get signedIn() { return Boolean(this.user); }
+
+  /**
+   * Какие способы входа включены на сервере. Спрашиваем у самого Supabase,
+   * а не гадаем: кнопка Google не должна висеть на экране, пока провайдер
+   * не подключён, и должна появиться сама, как только его включат.
+   * Ответ кэшируется на время жизни вкладки.
+   */
+  async providers() {
+    if (!backendReady()) return { email: false, google: false, otp: false };
+    if (this.providerCache) return this.providerCache;
+    if (!this.providerPromise) {
+      const url = `${CONFIG.supabaseUrl.replace(/\/+$/, "")}/auth/v1/settings`;
+      this.providerPromise = fetch(url, { headers: { apikey: CONFIG.supabaseAnonKey } })
+        .then((response) => (response.ok ? response.json() : null))
+        .then((payload) => {
+          const external = payload?.external || {};
+          this.providerCache = {
+            email: external.email !== false,
+            google: external.google === true,
+            otp: external.email !== false,
+          };
+          this.emit("providers", this.providerCache);
+          return this.providerCache;
+        })
+        .catch(() => ({ email: true, google: false, otp: true }));
+    }
+    return this.providerPromise;
+  }
 
   setStatus(status, error = null) {
     if (!STATES.includes(status)) return;
