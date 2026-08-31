@@ -50,6 +50,32 @@ export async function serveStrokeData(context) {
   });
 }
 
+/**
+ * Тесты не должны ходить в настоящий Supabase: сеть в CI недоступна, а результат
+ * не должен зависеть от того, заполнен config.js или нет. Отвечаем как живой
+ * сервер, но всегда отказом — так проверяется, что фронтенд ничего не решает сам.
+ */
+export async function stubBackend(context, { adminStatus = 401 } = {}) {
+  await context.route("**://*.supabase.co/**", async (route) => {
+    const url = route.request().url();
+    if (url.includes("/auth/v1/settings")) {
+      return route.fulfill({ status: 200, contentType: "application/json",
+        body: JSON.stringify({ external: { email: true, google: true }, disable_signup: false }) });
+    }
+    if (url.includes("/functions/v1/admin-auth")) {
+      return route.fulfill({ status: adminStatus, contentType: "application/json",
+        body: JSON.stringify({ error: "invalid", attemptsLeft: 4 }) });
+    }
+    if (url.includes("/functions/v1/admin-edits")) {
+      return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ edits: [] }) });
+    }
+    if (url.includes("/functions/v1/tts")) {
+      return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ url: null }) });
+    }
+    return route.fulfill({ status: 200, contentType: "application/json", body: "{}" });
+  });
+}
+
 export function collectErrors(page) {
   const errors = [];
   page.on("console", (message) => { if (message.type() === "error") errors.push(message.text()); });

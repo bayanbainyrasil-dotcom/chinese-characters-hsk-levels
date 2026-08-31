@@ -4,7 +4,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { startServer, launch, serveStrokeData, collectErrors, drawCharacter, LEGACY_PROGRESS } from "./helpers.mjs";
+import { startServer, launch, serveStrokeData, stubBackend, collectErrors, drawCharacter, LEGACY_PROGRESS } from "./helpers.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const PROGRESS_KEY = "bishun_hsk30_progress_v1";
@@ -30,6 +30,7 @@ async function open({ viewport = { width: 1280, height: 900 }, legacy = null, re
     deviceScaleFactor: isMobile ? 2 : 1,
   });
   await serveStrokeData(context);
+  await stubBackend(context);
   const page = await context.newPage();
   const errors = collectErrors(page);
   if (legacy) {
@@ -323,7 +324,13 @@ test("настройки звука сохраняются и уходят в о
 test("гостевой режим не требует аккаунта", async () => {
   const { context, page } = await open();
   await page.evaluate(() => window.__hsk.showView("settingsView"));
-  await page.locator("#authGuest").click();
+  const configured = await page.evaluate(() => Boolean(window.__hsk.backendReady()));
+  if (configured) {
+    await page.locator("#authGuest").click();
+  } else {
+    // Без бэкенда аккаунта нет вовсе — «гость» это единственный режим.
+    await page.locator("[data-back-home]").first().click();
+  }
   assert.equal(await page.locator("#homeView").isVisible(), true);
   await context.close();
 });
@@ -333,8 +340,39 @@ test("админ-раздел не проверяет пароль в брауз
   await page.locator("#adminButton").click();
   await page.locator("#adminGate").waitFor({ state: "visible" });
   assert.match(await page.locator('label[for="adminPin"]').textContent(), /Пароль администратора/);
-  // Бэкенд не настроен — форма честно заблокирована, а не «проверяет» локально.
-  assert.equal(await page.locator("#adminGateSubmit").isDisabled(), true);
+
+  const configured = await page.evaluate(() => Boolean(window.__hsk.backendReady()));
+  if (!configured) {
+    // Без бэкенда форма честно заблокирована, а не «проверяет» локально.
+    assert.equal(await page.locator("#adminGateSubmit").isDisabled(), true);
+    await context.close();
+    return;
+  }
+
+  // Исторический PIN не должен открывать панель: решение принимает только сервер,
+  // а сервер в тесте отвечает отказом.
+  await page.locator("#adminPin").fill("2007");
+  await page.locator("#adminGateSubmit").click();
+  await page.locator("#adminGateMessage.error").waitFor({ state: "visible" });
+  assert.equal(await page.locator("#adminPanel").isVisible(), false);
+  assert.equal(await page.locator("#adminGate").isVisible(), true);
+  await context.close();
+});
+
+test("без бэкенда вместо нерабочих кнопок входа показывается пояснение", async () => {
+  const { context, page } = await open();
+  await page.evaluate(() => window.__hsk.showView("settingsView"));
+  const configured = await page.evaluate(() => Boolean(window.__hsk.backendReady()));
+  if (configured) {
+    assert.equal(await page.locator("#signInBlock").isVisible(), true);
+    assert.equal(await page.locator("#backendOffBlock").isVisible(), false);
+  } else {
+    assert.equal(await page.locator("#signInBlock").isVisible(), false);
+    assert.equal(await page.locator("#backendOffBlock").isVisible(), true);
+    for (const id of ["authGoogle", "authSignIn", "authSignUp", "authMagicLink"]) {
+      assert.equal(await page.locator(`#${id}`).isVisible(), false, `${id} не должен быть виден без бэкенда`);
+    }
+  }
   await context.close();
 });
 

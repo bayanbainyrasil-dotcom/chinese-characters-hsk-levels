@@ -22,6 +22,14 @@ const MAX_CHARS = 24;
 
 const admin = createClient(SUPABASE_URL, SERVICE_ROLE, { auth: { persistSession: false } });
 
+/** Есть ли вообще ключ у выбранного провайдера озвучки. */
+function providerConfigured(): boolean {
+  if (PROVIDER === "azure") return Boolean(Deno.env.get("AZURE_SPEECH_KEY") && Deno.env.get("AZURE_SPEECH_REGION"));
+  if (PROVIDER === "google") return Boolean(Deno.env.get("GOOGLE_TTS_KEY"));
+  if (PROVIDER === "openai") return Boolean(Deno.env.get("OPENAI_API_KEY"));
+  return false;
+}
+
 Deno.serve(async (request) => {
   const early = preflight(request);
   if (early) return early;
@@ -45,11 +53,16 @@ Deno.serve(async (request) => {
   const head = await fetch(publicUrl, { method: "HEAD" });
   if (head.ok) return json(request, { url: publicUrl, cached: true });
 
+  // Пока ключ провайдера не задан, это не ошибка: сайт просто читает голосом
+  // браузера. Отвечаем честным 200 без ссылки, чтобы не сыпать 502 на каждый знак.
+  if (!providerConfigured()) return json(request, { url: null, reason: "provider-not-configured" });
+
   let audio: ArrayBuffer;
   try {
     audio = await synthesize(text, slow);
   } catch (error) {
-    return json(request, { error: `Провайдер озвучки недоступен: ${error}` }, 502);
+    console.error("Провайдер озвучки недоступен", error);
+    return json(request, { url: null, reason: "provider-error" });
   }
 
   const { error } = await admin.storage.from(BUCKET).upload(key, audio, {

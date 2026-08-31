@@ -826,11 +826,15 @@ function renderSettings() {
     button.classList.toggle("active", active);
     button.setAttribute("aria-pressed", String(active));
   });
+  // Пока бэкенд не настроен, форма входа не показывается вообще: кнопка, которая
+  // гарантированно падает с ошибкой, хуже, чем честная строка о том, что вход не подключён.
+  const backendOn = backendReady();
   $("accountState").textContent = sync.signedIn
     ? `Вход выполнен: ${sync.user?.email || "аккаунт Google"}`
-    : backendReady() ? "Вы занимаетесь без аккаунта — прогресс хранится только на этом устройстве."
-      : "Синхронизация выключена: в js/config.js не заданы настройки Supabase.";
-  $("signInBlock").classList.toggle("hidden", sync.signedIn);
+    : backendOn ? "Вы занимаетесь без аккаунта — прогресс хранится только на этом устройстве."
+      : "Прогресс сохраняется на этом устройстве.";
+  $("signInBlock").classList.toggle("hidden", sync.signedIn || !backendOn);
+  $("backendOffBlock").classList.toggle("hidden", sync.signedIn || backendOn);
   $("signOutBlock").classList.toggle("hidden", !sync.signedIn);
 }
 
@@ -858,7 +862,7 @@ function configureAdminGate() {
   $("adminGateTitle").textContent = "Вход в управление";
   $("adminGateText").textContent = configured
     ? "Введите пароль администратора. Он проверяется на сервере."
-    : "Проверка администратора выполняется на сервере. Заполните настройки Supabase в js/config.js.";
+    : "Управление станет доступно, когда к сайту подключат серверную часть.";
   $("adminGateSubmit").disabled = !configured;
   $("adminPin").disabled = !configured;
   $("adminGate").classList.toggle("hidden", adminUnlocked);
@@ -1233,4 +1237,5 @@ window.__hsk = {
   startHskLevel, startSingleCharacter,
   completeCurrentItem: (mistakes = 0) => completeCurrentItem(mistakes),
   showView,
+  backendReady,
 };

@@ -1,11 +1,11 @@
 // Публичная настройка. Секретов здесь нет и быть не должно:
-// anon key Supabase публичен по замыслу, доступ ограничивают политики RLS.
+// publishable key Supabase публичен по замыслу, доступ ограничивают политики RLS.
 // PIN администратора и ключи TTS живут только в переменных окружения Supabase.
 
 export const CONFIG = {
   // Заполняется после создания проекта Supabase (см. docs/supabase-setup.md)
-  supabaseUrl: "",
-  supabaseAnonKey: "",
+  supabaseUrl: "https://rnrjvgheyehywarjrwsf.supabase.co",
+  supabaseAnonKey: "sb_publishable_u-6eezoElzTALx8FIhcpnA_NrK-y0DC",
 
   // Имена Edge Functions
   ttsFunction: "tts",
@@ -15,7 +15,7 @@ export const CONFIG = {
   // Папка со статическим аудиопаком (генерируется tools/generate-audio.mjs)
   audioBase: "audio",
 
-  appVersion: "20260830-1",
+  appVersion: "20260831-1",
 };
 
 export function backendReady() {

@@ -5,7 +5,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { startServer, launch, serveStrokeData, collectErrors, drawCharacter } from "./helpers.mjs";
+import { startServer, launch, serveStrokeData, stubBackend, collectErrors, drawCharacter } from "./helpers.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const AUDIO = path.join(ROOT, "audio");
@@ -46,6 +46,7 @@ after(async () => {
 async function open() {
   const context = await browser.newContext({ viewport: { width: 1280, height: 900 } });
   await serveStrokeData(context);
+  await stubBackend(context);
   const page = await context.newPage();
   const errors = collectErrors(page);
   await page.goto(base, { waitUntil: "domcontentloaded" });
