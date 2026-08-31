@@ -15,7 +15,7 @@ export const CONFIG = {
   // Папка со статическим аудиопаком (генерируется tools/generate-audio.mjs)
   audioBase: "audio",
 
-  appVersion: "20260831-3",
+  appVersion: "20260831-4",
 };
 
 export function backendReady() {

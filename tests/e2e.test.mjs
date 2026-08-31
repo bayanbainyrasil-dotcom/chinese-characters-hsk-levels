@@ -368,6 +368,7 @@ test("ошибки входа показываются по-русски", async
     [{ message: "Password should be at least 6 characters." }, /от 6 символов/i],
     [{ message: "Unable to validate email address: invalid format" }, /опечатка/i],
     [{ message: "Failed to fetch" }, /Нет связи с сервером/i],
+    [{ message: "Unsupported provider: provider is not enabled" }, /не подключён/i],
   ];
   for (const [error, expected] of cases) {
     const text = await page.evaluate((e) => window.__hsk.authErrorText(e), error);

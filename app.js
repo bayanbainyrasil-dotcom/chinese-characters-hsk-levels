@@ -1116,6 +1116,7 @@ function authErrorText(error) {
     [/email not confirmed|email_not_confirmed/i, "Адрес почты ещё не подтверждён"],
     [/rate limit|over_email_send_rate_limit|too many/i, "Слишком много попыток подряд — подождите минуту"],
     [/signups not allowed|signup_disabled/i, "Регистрация сейчас закрыта"],
+    [/unsupported provider|provider is not enabled/i, "Этот способ входа пока не подключён"],
     [/failed to fetch|networkerror|load failed/i, "Нет связи с сервером — проверьте интернет"],
   ];
   for (const [pattern, text] of table) {
