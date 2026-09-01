@@ -1,4 +1,4 @@
-const SHELL_CACHE = "bishun-shell-v21";
+const SHELL_CACHE = "bishun-shell-v22";
 const CHARACTER_CACHE = "bishun-characters-v1";
 const AUDIO_CACHE = "bishun-audio-v1";
 const SHELL = [
@@ -14,6 +14,7 @@ const SHELL = [
   "data/verification.json",
   "data/writing.json",
   "data/characters.json",
+  "data/tts-ready.json",
   "js/config.js",
   "js/storage.js",
   "js/progress.js",

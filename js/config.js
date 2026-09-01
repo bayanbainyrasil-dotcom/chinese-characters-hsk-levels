@@ -15,7 +15,11 @@ export const CONFIG = {
   // Папка со статическим аудиопаком (генерируется tools/generate-audio.mjs)
   audioBase: "audio",
 
-  appVersion: "20260901-2",
+  // Ведро Supabase Storage с готовыми записями озвучки.
+  // Адрес файла предсказуем, поэтому его берут напрямую, без вызова функции.
+  ttsBucket: "tts-audio",
+
+  appVersion: "20260901-3",
 };
 
 export function backendReady() {

@@ -5,11 +5,11 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { startServer, launch, serveStrokeData, stubBackend, collectErrors, drawCharacter } from "./helpers.mjs";
+import { startServer, launch, serveStrokeData, stubBackend, silentMp3, collectErrors, drawCharacter } from "./helpers.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const AUDIO = path.join(ROOT, "audio");
-const TONE = process.env.TONE_MP3 || "/tmp/tone.mp3";
+
 
 let server, base, browser, created = [];
 
@@ -19,7 +19,7 @@ before(async () => {
   ({ server, url: base } = await startServer());
   browser = await launch({ args: ["--autoplay-policy=no-user-gesture-required"] });
   // Подкладываем настоящие mp3 для нескольких знаков, чтобы проверить статический путь.
-  const sample = fs.readFileSync(TONE);
+  const sample = silentMp3();
   const manifest = { note: "тестовый", voice: "test", generatedAt: new Date().toISOString(), ids: [] };
   for (const text of ["一", "十", "人", "安", "汉语"]) {
     for (const dir of ["n", "s"]) {
@@ -53,6 +53,44 @@ async function open() {
   await page.waitForFunction(() => Boolean(window.__hsk));
   return { context, page, errors };
 }
+
+test("готовая запись берётся из хранилища, минуя функцию", async () => {
+  const ready = JSON.parse(fs.readFileSync(path.join(ROOT, "data/tts-ready.json"), "utf8"));
+  const known = "\u9e1f"; // 鸟 — заведомо не в списке готовых
+  assert.ok(!ready.chars.includes(known), "знак для проверки не должен быть в списке");
+  const inStaticPack = ["一", "十", "人", "安"];
+  const listedChar = [...ready.chars].find((c) => !inStaticPack.includes(c));
+
+  const context = await browser.newContext({ viewport: { width: 1280, height: 900 } });
+  await serveStrokeData(context);
+  await stubBackend(context);
+  let functionCalls = 0;
+  let storageCalls = 0;
+  await context.route("**/storage/v1/object/public/**", async (route) => {
+    storageCalls += 1;
+    await route.fulfill({ status: 200, contentType: "audio/mpeg", body: silentMp3() });
+  });
+  await context.route("**/functions/v1/tts", async (route) => {
+    functionCalls += 1;
+    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ url: null }) });
+  });
+  const page = await context.newPage();
+  await page.goto(base, { waitUntil: "domcontentloaded" });
+  await page.waitForFunction(() => Boolean(window.__hsk));
+
+  // знак из списка: идём прямо в хранилище, функцию не трогаем
+  const source = await page.evaluate((c) => window.__hsk.audio.speak(c, { slow: false }), listedChar);
+  assert.equal(source, "server", "запись должна проигрываться с сервера");
+  assert.ok(storageCalls > 0, "приложение должно забрать запись из хранилища");
+  assert.equal(functionCalls, 0, "функцию дёргать не нужно, запись уже готова");
+
+  // знака нет в списке: в хранилище не стучимся вслепую, идём к функции
+  const before = storageCalls;
+  await page.evaluate((c) => window.__hsk.audio.speak(c, { slow: false }), known);
+  assert.equal(storageCalls, before, "в хранилище не должно быть запроса вслепую");
+  assert.ok(functionCalls > 0, "для незнакомого знака нужна функция");
+  await context.close();
+});
 
 test("статический пак используется как основной источник", async () => {
   const { context, page, errors } = await open();

@@ -22,6 +22,8 @@ const state = {
   manifest: null,
   manifestPromise: null,
   serverUrls: new Map(),
+  readyIds: null,
+  readyPromise: null,
   playing: false,
   token: 0,
 };
@@ -144,8 +146,47 @@ async function serverUrl(text, slow) {
   return null;
 }
 
+/**
+ * Адрес готовой записи в хранилище. Имя файла считается из самого текста,
+ * поэтому его можно составить на клиенте и забрать запись одним запросом,
+ * не дёргая функцию. Функция нужна только когда записи ещё нет.
+ */
+function storageUrl(text, slow) {
+  if (!CONFIG.supabaseUrl || !CONFIG.ttsBucket) return null;
+  const base = CONFIG.supabaseUrl.replace(/\/+$/, "");
+  return `${base}/storage/v1/object/public/${CONFIG.ttsBucket}/${slow ? "s" : "n"}/${audioId(text)}.mp3`;
+}
+
+/**
+ * Список знаков, запись которых уже создана. Без него пришлось бы проверять
+ * наличие файла запросом, а каждый промах — это 404 в консоли у пользователя.
+ */
+async function readyIds() {
+  if (state.readyIds) return state.readyIds;
+  if (!state.readyPromise) {
+    state.readyPromise = fetch("data/tts-ready.json", { cache: "force-cache" })
+      .then((response) => (response.ok ? response.json() : null))
+      .then((payload) => {
+        state.readyIds = new Set(typeof payload?.chars === "string" ? [...payload.chars] : []);
+        return state.readyIds;
+      })
+      .catch(() => { state.readyIds = new Set(); return state.readyIds; });
+  }
+  return state.readyPromise;
+}
+
+async function readyInStorage(text, slow) {
+  const url = storageUrl(text, slow);
+  if (!url) return null;
+  const ids = await readyIds();
+  if (!ids.has(text)) return null;
+  return url;
+}
+
 async function resolveUrl(text, slow) {
-  return (await hasStatic(text, slow)) || (await serverUrl(text, slow));
+  return (await hasStatic(text, slow))
+    || (await readyInStorage(text, slow))
+    || (await serverUrl(text, slow));
 }
 
 /** Заранее кладёт запись в кэш, чтобы следующий знак звучал без задержки. */

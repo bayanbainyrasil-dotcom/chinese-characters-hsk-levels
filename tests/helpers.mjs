@@ -55,9 +55,29 @@ export async function serveStrokeData(context) {
  * не должен зависеть от того, заполнен config.js или нет. Отвечаем как живой
  * сервер, но всегда отказом — так проверяется, что фронтенд ничего не решает сам.
  */
+/**
+ * Короткая тишина в mp3, собранная из кадров MPEG-1 Layer III (128 кбит/с,
+ * 44,1 кГц). Держать в репозитории бинарник ради тестов незачем, а внешний
+ * файл в /tmp делал бы прогон зависимым от машины.
+ */
+export function silentMp3(frames = 12) {
+  const FRAME = 417;
+  const out = Buff...alloc(FRAME * frames);
+  for (let i = 0; i < frames; i += 1) {
+    const at = i * FRAME;
+    out[at] = 0xff; out[at + 1] = 0xfb; out[at + 2] = 0x90; out[at + 3] = 0x64;
+  }
+  return out;
+}
+
 export async function stubBackend(context, { adminStatus = 401, google = true } = {}) {
+  const tone = silentMp3();
   await context.route("**://*.supabase.co/**", async (route) => {
     const url = route.request().url();
+    if (url.includes("/storage/v1/object/public/")) {
+      // Запись есть: приложение обращается сюда только за тем, что в списке готовых.
+      return route.fulfill({ status: 200, contentType: "audio/mpeg", body: tone });
+    }
     if (url.includes("/auth/v1/settings")) {
       return route.fulfill({ status: 200, contentType: "application/json",
         body: JSON.stringify({ external: { email: true, google }, disable_signup: false }) });
