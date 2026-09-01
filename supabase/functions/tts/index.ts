@@ -160,8 +160,12 @@ function edgeSsml(text: string, slow: boolean) {
  */
 async function edgeNeural(text: string, slow: boolean): Promise<ArrayBuffer> {
   const gec = await secMsGec();
+  // ConnectionId обязателен: эталонный клиент всегда его шлёт, без него
+  // сервер отвечает 403 ещё на этапе рукопожатия.
+  const connectionId = crypto.randomUUID().replace(/-/g, "");
   const path = "/consumer/speech/synthesize/readaloud/edge/v1"
-    + `?TrustedClientToken=${EDGE_TOKEN}&Sec-MS-GEC=${gec}&Sec-MS-GEC-Version=${EDGE_VERSION}`;
+    + `?TrustedClientToken=${EDGE_TOKEN}&Sec-MS-GEC=${gec}`
+    + `&Sec-MS-GEC-Version=${EDGE_VERSION}&ConnectionId=${connectionId}`;
   const conn = await Deno.connectTls({ hostname: "speech.platform.bing.com", port: 443 });
   const deadline = Date.now() + 20000;
   try {
@@ -189,7 +193,7 @@ async function edgeNeural(text: string, slow: boolean): Promise<ArrayBuffer> {
     if (!/^HTTP\/1\.1 101/.test(head)) throw new Error(`рукопожатие: ${head.split("\r\n")[0]}`);
 
     const stamp = new Date().toString();
-    const requestId = crypto.randomUUID().replace(/-/g, "");
+    const requestId = connectionId;
     await writeAll(conn, wsFrame(1,
       `X-Timestamp:${stamp}\r\nContent-Type:application/json; charset=utf-8\r\nPath:speech.config\r\n\r\n`
       + '{"context":{"synthesis":{"audio":{"metadataoptions":{"sentenceBoundaryEnabled":"false",'
