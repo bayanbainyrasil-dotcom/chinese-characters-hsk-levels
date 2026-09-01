@@ -136,7 +136,7 @@ async function translateTts(text: string, slow: boolean): Promise<ArrayBuffer> {
    ======================================================================== */
 
 const EDGE_TOKEN = "6A5AA1D4EAFF4E9FB37E23D68491D6F4";
-const EDGE_VERSION = "1-131.0.2903.63";
+const EDGE_VERSION = "1-130.0.2849.68";
 
 async function secMsGec(): Promise<string> {
   // Такты Windows FILETIME (100 нс с 1601 года), округлённые до 5 минут.
@@ -175,7 +175,8 @@ async function edgeNeural(text: string, slow: boolean): Promise<ArrayBuffer> {
       "Sec-WebSocket-Version: 13",
       "Origin: chrome-extension://jdiccldimpahbcfdikimhckbmoiedhbn",
       "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
-        + "(KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36 Edg/131.0.0.0",
+        + "(KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36 Edg/130.0.0.0",
+      "Accept-Encoding: gzip, deflate, br",
       "Accept-Language: en-US,en;q=0.9",
       "Pragma: no-cache",
       "Cache-Control: no-cache",
