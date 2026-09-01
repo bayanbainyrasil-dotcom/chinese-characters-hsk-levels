@@ -153,56 +153,161 @@ function edgeSsml(text: string, slow: boolean) {
     + `</voice></speak>`;
 }
 
-function edgeNeural(text: string, slow: boolean): Promise<ArrayBuffer> {
-  return new Promise(async (resolve, reject) => {
-    const gec = await secMsGec();
-    const url = "wss://speech.platform.bing.com/consumer/speech/synthesize/readaloud/edge/v1"
-      + `?TrustedClientToken=${EDGE_TOKEN}&Sec-MS-GEC=${gec}&Sec-MS-GEC-Version=${EDGE_VERSION}`;
-    const socket = new WebSocket(url);
-    socket.binaryType = "arraybuffer";
+/**
+ * Штатный WebSocket браузера и Deno не даёт задать Origin и User-Agent, а без
+ * них Microsoft рвёт соединение. Поэтому рукопожатие делаем руками поверх TLS:
+ * это единственный способ получить нейронные голоса без ключа.
+ */
+async function edgeNeural(text: string, slow: boolean): Promise<ArrayBuffer> {
+  const gec = await secMsGec();
+  const path = "/consumer/speech/synthesize/readaloud/edge/v1"
+    + `?TrustedClientToken=${EDGE_TOKEN}&Sec-MS-GEC=${gec}&Sec-MS-GEC-Version=${EDGE_VERSION}`;
+  const conn = await Deno.connectTls({ hostname: "speech.platform.bing.com", port: 443 });
+  const deadline = Date.now() + 20000;
+  try {
+    const nonce = btoa(String.fromCharCode(...crypto.getRandomValues(new Uint8Array(16))));
+    const handshake = [
+      `GET ${path} HTTP/1.1`,
+      "Host: speech.platform.bing.com",
+      "Upgrade: websocket",
+      "Connection: Upgrade",
+      `Sec-WebSocket-Key: ${nonce}`,
+      "Sec-WebSocket-Version: 13",
+      "Origin: chrome-extension://jdiccldimpahbcfdikimhckbmoiedhbn",
+      "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+        + "(KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36 Edg/131.0.0.0",
+      "Accept-Language: en-US,en;q=0.9",
+      "Pragma: no-cache",
+      "Cache-Control: no-cache",
+      "", "",
+    ].join("\r\n");
+    await writeAll(conn, new TextEncoder().encode(handshake));
 
-    const chunks: Uint8Array[] = [];
+    const reader = new FrameReader(conn, deadline);
+    const head = await reader.readUntil("\r\n\r\n");
+    if (!/^HTTP\/1\.1 101/.test(head)) throw new Error(`рукопожатие: ${head.split("\r\n")[0]}`);
+
+    const stamp = new Date().toString();
     const requestId = crypto.randomUUID().replace(/-/g, "");
-    const timer = setTimeout(() => { try { socket.close(); } catch { /* уже закрыт */ } reject(new Error("таймаут озвучки")); }, 20000);
-    const fail = (error: unknown) => { clearTimeout(timer); try { socket.close(); } catch { /* уже закрыт */ } reject(error); };
+    await writeAll(conn, wsFrame(1,
+      `X-Timestamp:${stamp}\r\nContent-Type:application/json; charset=utf-8\r\nPath:speech.config\r\n\r\n`
+      + '{"context":{"synthesis":{"audio":{"metadataoptions":{"sentenceBoundaryEnabled":"false",'
+      + '"wordBoundaryEnabled":"false"},"outputFormat":"audio-24khz-48kbitrate-mono-mp3"}}}}'));
+    await writeAll(conn, wsFrame(1,
+      `X-RequestId:${requestId}\r\nContent-Type:application/ssml+xml\r\nX-Timestamp:${stamp}\r\nPath:ssml\r\n\r\n`
+      + edgeSsml(text, slow)));
 
-    socket.onerror = () => fail(new Error("сокет озвучки не открылся"));
-
-    socket.onopen = () => {
-      const stamp = new Date().toString();
-      socket.send(
-        `X-Timestamp:${stamp}\r\nContent-Type:application/json; charset=utf-8\r\nPath:speech.config\r\n\r\n`
-        + `{"context":{"synthesis":{"audio":{"metadataoptions":{"sentenceBoundaryEnabled":"false","wordBoundaryEnabled":"false"},`
-        + `"outputFormat":"audio-24khz-48kbitrate-mono-mp3"}}}}`,
-      );
-      socket.send(
-        `X-RequestId:${requestId}\r\nContent-Type:application/ssml+xml\r\nX-Timestamp:${stamp}\r\nPath:ssml\r\n\r\n`
-        + edgeSsml(text, slow),
-      );
-    };
-
-    socket.onmessage = (event) => {
-      if (typeof event.data === "string") {
-        if (event.data.includes("Path:turn.end")) {
-          clearTimeout(timer);
-          try { socket.close(); } catch { /* уже закрыт */ }
-          if (!chunks.length) return reject(new Error("сервер не прислал звук"));
-          const total = chunks.reduce((sum, part) => sum + part.length, 0);
-          const merged = new Uint8Array(total);
-          let offset = 0;
-          for (const part of chunks) { merged.set(part, offset); offset += part.length; }
-          resolve(merged.buffer);
-        }
-        return;
+    const parts: Uint8Array[] = [];
+    for (;;) {
+      const frame = await reader.readFrame();
+      if (frame.opcode === 8) throw new Error("сервер закрыл соединение");
+      if (frame.opcode === 9) { await writeAll(conn, wsFrameBytes(10, frame.payload)); continue; }
+      if (frame.opcode === 1) {
+        if (new TextDecoder().decode(frame.payload).includes("Path:turn.end")) break;
+        continue;
       }
-      // Двоичный кадр: 2 байта длины заголовка, сам заголовок, дальше mp3.
-      const view = new Uint8Array(event.data as ArrayBuffer);
-      const headerLength = (view[0] << 8) | view[1];
-      const header = new TextDecoder().decode(view.subarray(2, 2 + headerLength));
-      if (header.includes("Path:audio")) chunks.push(view.subarray(2 + headerLength));
-    };
-  });
+      if (frame.opcode === 2 || frame.opcode === 0) {
+        const view = frame.payload;
+        const headerLength = (view[0] << 8) | view[1];
+        const header = new TextDecoder().decode(view.subarray(2, 2 + headerLength));
+        if (header.includes("Path:audio")) parts.push(view.subarray(2 + headerLength));
+      }
+    }
+    if (!parts.length) throw new Error("сервер не прислал звук");
+    const total = parts.reduce((sum, part) => sum + part.length, 0);
+    const merged = new Uint8Array(total);
+    let offset = 0;
+    for (const part of parts) { merged.set(part, offset); offset += part.length; }
+    return merged.buffer;
+  } finally {
+    try { conn.close(); } catch { /* уже закрыт */ }
+  }
 }
+
+async function writeAll(conn: Deno.Conn, data: Uint8Array) {
+  let written = 0;
+  while (written < data.length) written += await conn.write(data.subarray(written));
+}
+
+/** Кадр WebSocket от клиента обязан быть маскированным. */
+function wsFrameBytes(opcode: number, payload: Uint8Array): Uint8Array {
+  const length = payload.length;
+  const extra = length < 126 ? 0 : length < 65536 ? 2 : 8;
+  const frame = new Uint8Array(2 + extra + 4 + length);
+  frame[0] = 0x80 | opcode;
+  frame[1] = 0x80 | (extra === 0 ? length : extra === 2 ? 126 : 127);
+  if (extra === 2) { frame[2] = (length >> 8) & 0xff; frame[3] = length & 0xff; }
+  if (extra === 8) {
+    let rest = BigInt(length);
+    for (let i = 9; i >= 2; i -= 1) { frame[i] = Number(rest & 0xffn); rest >>= 8n; }
+  }
+  const mask = crypto.getRandomValues(new Uint8Array(4));
+  frame.set(mask, 2 + extra);
+  for (let i = 0; i < length; i += 1) frame[2 + extra + 4 + i] = payload[i] ^ mask[i % 4];
+  return frame;
+}
+
+function wsFrame(opcode: number, text: string): Uint8Array {
+  return wsFrameBytes(opcode, new TextEncoder().encode(text));
+}
+
+/** Буферизованное чтение кадров: TCP отдаёт данные кусками произвольного размера. */
+class FrameReader {
+  private buffer = new Uint8Array(0);
+  constructor(private conn: Deno.Conn, private deadline: number) {}
+
+  private async pull() {
+    if (Date.now() > this.deadline) throw new Error("таймаут озвучки");
+    const chunk = new Uint8Array(16384);
+    const read = await this.conn.read(chunk);
+    if (read === null) throw new Error("соединение закрылось");
+    const next = new Uint8Array(this.buffer.length + read);
+    next.set(this.buffer); next.set(chunk.subarray(0, read), this.buffer.length);
+    this.buffer = next;
+  }
+
+  private async need(count: number) {
+    while (this.buffer.length < count) await this.pull();
+  }
+
+  private take(count: number) {
+    const out = this.buffer.subarray(0, count);
+    this.buffer = this.buffer.subarray(count);
+    return out;
+  }
+
+  async readUntil(marker: string): Promise<string> {
+    const decoder = new TextDecoder();
+    for (;;) {
+      const text = decoder.decode(this.buffer);
+      const at = text.indexOf(marker);
+      if (at >= 0) {
+        const bytes = new TextEncoder().encode(text.slice(0, at + marker.length)).length;
+        return decoder.decode(this.take(bytes));
+      }
+      await this.pull();
+    }
+  }
+
+  async readFrame(): Promise<{ opcode: number; payload: Uint8Array }> {
+    await this.need(2);
+    const opcode = this.buffer[0] & 0x0f;
+    const short = this.buffer[1] & 0x7f;
+    let offset = 2;
+    let length = short;
+    if (short === 126) { await this.need(4); length = (this.buffer[2] << 8) | this.buffer[3]; offset = 4; }
+    else if (short === 127) {
+      await this.need(10);
+      length = 0;
+      for (let i = 2; i < 10; i += 1) length = length * 256 + this.buffer[i];
+      offset = 10;
+    }
+    await this.need(offset + length);
+    this.take(offset);
+    return { opcode, payload: this.take(length).slice() };
+  }
+}
+
 
 async function azure(text: string, slow: boolean) {
   const key = Deno.env.get("AZURE_SPEECH_KEY");
