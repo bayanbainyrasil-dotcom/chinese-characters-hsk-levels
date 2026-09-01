@@ -62,7 +62,7 @@ export async function serveStrokeData(context) {
  */
 export function silentMp3(frames = 12) {
   const FRAME = 417;
-  const out = Buff...alloc(FRAME * frames);
+  const out = Buffer.alloc(FRAME * frames);
   for (let i = 0; i < frames; i += 1) {
     const at = i * FRAME;
     out[at] = 0xff; out[at + 1] = 0xfb; out[at + 2] = 0x90; out[at + 3] = 0x64;
