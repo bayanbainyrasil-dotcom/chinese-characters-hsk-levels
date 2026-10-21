@@ -810,3 +810,37 @@ body.sheet-open { overflow: hidden; }
 @media (min-width: 900px) {
   :root[data-theme="light"] .word-sheet-panel { box-shadow: 0 30px 80px rgba(74, 62, 45, .26); }
 }
+
+/* Memory route: independent controls and canvas; legacy practice stays intact. */
+.memory-entry { width:100%; text-align:left; padding:24px; margin:20px 0; border:1px solid var(--accent, #ba4b35); border-radius:8px; background:rgba(190,72,47,.10); color:inherit; display:grid; gap:10px; cursor:pointer; }
+.memory-entry strong {font-size:1.6rem;} .memory-entry-note{font-size:.9rem;opacity:.75;}
+.memory-metrics {display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:24px 0;}
+.memory-metrics div{padding:16px 12px;border:1px solid var(--border,#35383e);border-radius:8px;display:grid;gap:6px;}
+.memory-metrics strong{font-size:2rem;} .memory-metrics span{font-size:.85rem;opacity:.7;}
+.memory-options {display:flex;gap:18px;flex-wrap:wrap;margin:20px 0;}.memory-options label{display:grid;gap:8px;flex:1;min-width:170px;}
+.memory-options select{font:inherit;color:inherit;background:var(--surface,#202329);padding:12px;border:1px solid #666;border-radius:5px;}
+.memory-details,.memory-backup{margin-top:26px;padding:18px;border:1px solid var(--border,#35383e);border-radius:8px;}.memory-details summary{cursor:pointer;}.memory-details p{margin-top:12px;line-height:1.65;}
+.memory-file{position:relative;cursor:pointer;text-align:center;overflow:hidden;}.memory-file input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;}.memory-file:focus-within{outline:2px solid #d76548;outline-offset:3px;}
+.memory-cue{font-size:clamp(1.4rem,4vw,2rem);overflow-wrap:anywhere;}.memory-study{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin:12px 0;}.memory-study p{flex-basis:100%;}.memory-character{font-size:3rem;}
+.memory-board{position:relative;background:#f5efdf;width:min(100%,360px);aspect-ratio:1;margin:20px auto;border-radius:8px;overflow:hidden;touch-action:none;user-select:none;}
+#memoryTarget{position:relative;z-index:2;width:100%;height:100%;}#memoryTarget svg{display:block;max-width:100%;height:auto;}.memory-feedback{min-height:3em;line-height:1.5;margin:16px 0;}
+#memoryView .primary-button{margin:10px 0;}#memoryView button:disabled{opacity:.45;cursor:not-allowed;}.memory-message{color:#e8785d;white-space:pre-wrap;}.memory-message:empty{display:none;}
+#memoryView{padding-bottom:40px;}#memoryView .action-row{margin-top:10px;}#memoryPause{display:block;margin:20px auto;}#memoryShape{font-size:.8rem;}#memoryExercise{max-width:620px;margin:auto;}
+@media(max-width:600px){.memory-metrics{grid-template-columns:repeat(2,1fr);}.memory-entry{padding:18px;}.memory-options{gap:12px;}#memoryView .action-row{gap:8px;}#memoryView button{min-height:44px;}}
+
+/* Memory aids use labels as well as color; no answer content is rendered at stage zero. */
+.mnemonic-panel { margin:20px 0; padding:18px; border:1px solid var(--border, #383c45); border-radius:10px; overflow-wrap:anywhere; }
+.mnemonic-panel h3 { margin:0 0 8px; font-size:20px; }
+.mnemonic-story { font-size:17px; line-height:1.6; }
+.mnemonic-parts { display:grid; gap:10px; margin:16px 0; }
+.mnemonic-across { grid-template-columns:repeat(2,minmax(0,1fr)); }
+.mnemonic-stack { grid-template-columns:1fr; }
+.mnemonic-part { display:flex; flex-direction:column; align-items:center; gap:6px; padding:12px; text-align:center; border-radius:8px; background:rgba(186,99,72,.10); border:1px solid #b97463; }
+.mnemonic-part-1 { border-color:#5e9b9a; background:rgba(68,136,135,.10); }
+.mnemonic-part-2 { border-color:#b3954d; background:rgba(172,141,63,.10); }
+.mnemonic-position { font-size:12px; letter-spacing:.04em; }
+.mnemonic-glyph { font-size:48px; line-height:1.2; font-weight:400; }
+.mnemonic-panel a { color:inherit; font-size:12px; text-underline-offset:3px; }
+.mnemonic-panel label { display:block; margin-top:20px; font-size:14px; }
+.mnemonic-panel textarea { display:block; width:100%; box-sizing:border-box; resize:vertical; min-height:90px; padding:10px; margin:8px 0; color:inherit; background:transparent; border:1px solid #7d828c; border-radius:6px; font:inherit; }
+.mnemonic-panel button { max-width:100%; white-space:normal; }

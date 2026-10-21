@@ -45,8 +45,8 @@
       }
     })();
   </script>
-  <link rel="stylesheet" href="styles.css?v=20260901-3">
-  <script type="module" src="app.js?v=20260901-3"></script>
+  <link rel="stylesheet" href="styles.css?v=20261019-1">
+  <script type="module" src="app.js?v=20261019-1"></script>
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -113,6 +113,7 @@
         <button class="mini-link" id="verificationButton" type="button">Проверка</button>
       </div>
 
+      <button class="memory-entry" id="memoryOpen" type="button"><span class="eyebrow">НОВЫЙ МАРШРУТ · ПАМЯТЬ</span><strong>Помнить, как пишется</strong><span>Выучи → напиши сам → проверь позже</span><span class="memory-entry-note">По 5 новых знаков. Забытые вернутся на отработку. →</span></button>
       <div class="section-label"><span>Маршрут обучения</span><span>4 этапа</span></div>
       <div class="stage-list" id="stageList">
         <button class="stage-card" data-stage="strokes" type="button"><span class="stage-number">01</span><span class="stage-copy"><strong>Восемь базовых черт</strong><small>横 · 竖 · 撇 · 捺 · 点 · 提 · 折 · 钩</small></span><span class="stage-progress" data-progress="strokes">0/8</span></button>
@@ -122,6 +123,37 @@
       </div>
 
       <aside class="pencil-note"><span class="pencil-icon">⌁</span><div><strong>Рука, Apple Pencil и мышка</strong><p>Поле письма одинаково работает на iPad, телефоне и компьютере.</p></div></aside>
+    </section>
+
+
+    <section class="view hidden" id="memoryView">
+      <div class="view-top"><button class="text-button" data-back-home type="button">← Главная</button><span>Пишу по памяти</span></div>
+      <p class="memory-message" id="memoryMessage" role="alert"></p>
+      <div id="memoryDashboard">
+        <div class="eyebrow">一步一步 · шаг за шагом</div><h2>Вспомнить. Написать. Закрепить.</h2>
+        <p class="lede compact">Сначала повторим то, что пора вспомнить. Потом добавим немного нового. Неизвестный знак разберём и отработаем.</p>
+        <div class="memory-metrics"><div><strong id="memoryDue">0</strong><span>готовы к повторению</span></div><div><strong id="memoryNew">5</strong><span>новых сегодня</span></div><div><strong id="memoryLearning">0</strong><span>в отработке</span></div><div><strong id="memoryStable">0</strong><span>устойчиво помню</span></div></div>
+        <div class="memory-options"><label>Новые знаки<select id="memoryLevel"><option value="1-2">Основы · HSK 1–2</option><option value="3">HSK 3</option><option value="4">HSK 4</option><option value="5">HSK 5</option><option value="6">HSK 6</option><option value="7-9">HSK 7–9</option></select></label><label>Новых в день<select id="memoryLimit"><option value="3">3 · спокойно</option><option value="5" selected>5 · начинаем здесь</option><option value="10">10 · больше практики</option></select></label></div>
+        <p id="memoryNextDue" class="source-note"></p>
+        <p id="memoryHistoryStats" class="muted"></p>
+        <button class="secondary-button" id="memoryNewOnly" type="button">Только новые и их отработка</button>
+        <button class="primary-button" id="memoryStart" type="button">Начать занятие</button>
+        <button class="secondary-button hidden" id="memoryResume" type="button">Продолжить незавершённый знак</button>
+        <details class="memory-details"><summary>Как мы проверяем память</summary><p>Новый знак сначала изучи с образцом и порядком черт. Знаки из прежней практики сначала проверим без подсказки. Затем напиши без образца по чтению и значению. Не помнишь — вернёмся к отработке. Проверки повторятся через другие задания, затем через 10 минут и в следующие дни.</p><p>Два промаха пера не означают, что ты забыл знак, но такая попытка не увеличит интервал. «Устойчиво помню» — успешные проверки в разные дни на протяжении как минимум недели. Это не обещание помнить навсегда.</p><p>Старые написания сохранены в свободной практике. Здесь память проверяется отдельно. Расписание — начальная настройка: 10 минут → 1, 3, 7, 14, 30 дней.</p></details>
+        <div class="memory-backup"><p id="memorySyncState" class="source-note" aria-live="polite">Расписание только на этом устройстве. Сохраните копию для переноса.</p><div class="action-row two"><button id="memoryExport" type="button" class="secondary-button">Скачать копию памяти</button><label class="secondary-button memory-file">Загрузить копию<input id="memoryImport" type="file" accept="application/json,.json"></label></div><button id="memorySync" type="button" class="text-button">Синхронизировать расписание</button><button id="memoryRebind" type="button" class="text-button">Связать с текущим аккаунтом…</button></div>
+      </div>
+      <div id="memoryExercise" class="hidden">
+        <div class="eyebrow" id="memoryPhase"></div><h2 id="memoryCue" class="memory-cue"></h2><p id="memoryContext" class="source-note"></p>
+        <div class="memory-study"><span id="memoryAnswer" class="memory-character hidden" lang="zh-Hans"></span><button id="memorySpeak" class="secondary-button" type="button" aria-label="Послушать произношение">♫ Послушать</button><p id="memoryExample" class="hidden"></p></div>
+        <p id="memoryShape" class="source-note"></p>
+        <div class="memory-board" id="memoryBoard"><span class="guide guide-v"></span><span class="guide guide-h"></span><div id="memoryTarget"></div><div id="memoryLoading" class="loading">Загрузка…</div></div>
+        <p id="memoryFeedback" class="memory-feedback" aria-live="polite"></p>
+        <section id="memoryMnemonic" class="mnemonic-panel hidden" aria-live="polite"></section>
+        <div id="memoryControls"><div class="action-row two"><button id="memoryStoryHint" class="secondary-button" type="button">Подсказка: история</button><button id="memoryPartsHint" class="secondary-button" type="button">Подсказка: части / форма</button></div><p class="source-note">Любая подсказка делает попытку тренировкой. Истории и разбор пока есть у 24 знаков; для остальных доступен образец.</p><div class="action-row two"><button id="memoryHelp" class="secondary-button" type="button">Показать и разобрать</button><button id="memoryForgot" class="secondary-button" type="button">Не помню</button></div><div class="action-row two"><button id="memoryRetry" class="text-button" type="button">Очистить поле</button><button id="memorySkip" class="text-button" type="button">Пропустить / неоднозначно</button></div></div>
+        <div id="memoryGrade" class="action-row two hidden"><button id="memoryGood" class="primary-button" type="button">Вспомнил сам</button><button id="memoryAgain" class="secondary-button" type="button">Не вспомнил</button></div>
+        <button id="memoryNext" class="primary-button hidden" type="button">Дальше</button><button id="memoryPause" class="text-button" type="button">Пауза · сохранить место</button>
+      </div>
+      <div id="memorySummary" class="hidden"><div class="eyebrow">Блок завершён</div><h2>Дай памяти время.</h2><p id="memorySummaryText" class="lede compact"></p><p id="memorySummaryDue"></p><button id="memoryContinue" class="secondary-button" type="button">Продолжить занятие</button><button id="memorySummaryBack" class="primary-button" type="button">Моё расписание</button></div>
     </section>
 
     <section class="view hidden" id="verificationView">
@@ -198,7 +230,7 @@
     <section class="view hidden" id="progressView">
       <div class="view-top"><button class="text-button" data-back-home type="button">← Главная</button><span>Прогресс</span></div>
       <div class="eyebrow">你的进步 · твой результат</div><h2>Практика письма</h2>
-      <div class="progress-hero"><strong id="totalMastered">0</strong><span>знаков изучено</span><div class="progress-ring" id="progressRing"><span id="progressPercent">0%</span></div></div>
+      <div class="progress-hero"><strong id="totalMastered">0</strong><span>знаков отработано в свободной практике</span><div class="progress-ring" id="progressRing"><span id="progressPercent">0%</span></div></div>
       <div class="metric-grid"><div><strong id="totalAttempts">0</strong><span>написаний</span></div><div><strong id="cleanAttempts">0</strong><span>без ошибок</span></div><div><strong id="practiceDays">0</strong><span>дней практики</span></div></div>
       <div class="section-label"><span>По разделам</span><span></span></div><div class="progress-list" id="progressList"></div>
       <p class="source-note" id="migrationNote"></p>
