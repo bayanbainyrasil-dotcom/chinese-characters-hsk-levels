@@ -1,4 +1,4 @@
-const SHELL_CACHE = "bishun-shell-v22";
+const SHELL_CACHE = "bishun-shell-v24";
 const CHARACTER_CACHE = "bishun-characters-v1";
 const AUDIO_CACHE = "bishun-audio-v1";
 const SHELL = [
@@ -24,7 +24,15 @@ const SHELL = [
   "js/audio.js",
   "js/wordcard.js",
   "js/admin.js",
-  "js/sync.js"
+  "js/sync.js",
+  "js/review-scheduler.js",
+  "js/review-store.js",
+  "js/review-sync.js",
+  "js/review-session.js",
+  "js/mnemonic-ids.js",
+  "js/mnemonic-data.js",
+  "js/mnemonic-panel.js",
+  "data/stroke-counts.json"
 ];
 
 self.addEventListener("install", (event) => {

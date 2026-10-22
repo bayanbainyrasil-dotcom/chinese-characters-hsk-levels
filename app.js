@@ -9,6 +9,8 @@ import {
   masteredHsk, completedCount, migrationInfo, restoreBackup,
 } from "./js/progress.js";
 import { KEYS, readJson, writeJson } from "./js/storage.js";
+import { createReviewSession } from "./js/review-session.js";
+import { supabaseClient } from "./js/sync.js";
 import { SyncEngine } from "./js/sync.js";
 import * as audio from "./js/audio.js";
 import * as motion from "./js/motion.js";
@@ -17,7 +19,7 @@ import { loadCharacters } from "./js/dictionary.js";
 import { openWordCard, close as closeWordCard } from "./js/wordcard.js";
 
 const $ = (id) => document.getElementById(id);
-const VIEW_IDS = ["homeView", "verificationView", "rulesView", "radicalsView", "hskView", "practiceView", "progressView", "settingsView", "adminView"];
+const VIEW_IDS = ["memoryView", "homeView", "verificationView", "rulesView", "radicalsView", "hskView", "practiceView", "progressView", "settingsView", "adminView"];
 const DATA_VERSION = "hsk30-2026-official-pinyin-2";
 
 const STROKES = [
@@ -96,6 +98,8 @@ const sync = new SyncEngine({
   },
 });
 
+const memory = createReviewSession({ loadWriter: loadHanziWriter, getClient: supabaseClient, getUser: () => sync.user });
+
 // --- общие мелочи ---------------------------------------------------------
 
 function saveProgress({ silent = false } = {}) {
@@ -105,6 +109,12 @@ function saveProgress({ silent = false } = {}) {
 
 function showView(id) {
   if (!VIEW_IDS.includes(id)) return;
+  if (currentView === "memoryView" && id !== "memoryView") memory.leave();
+  if (id === "memoryView" && currentView !== "memoryView") {
+    writerToken += 1;
+    try { writer?.cancelQuiz(); } catch (_) {}
+    memory.open();
+  }
   previousView = currentView;
   currentView = id;
   VIEW_IDS.forEach((viewId) => $(viewId)?.classList.toggle("hidden", viewId !== id));
@@ -256,7 +266,7 @@ async function renderHskLevels() {
     const button = document.createElement("button");
     button.type = "button";
     button.className = "level-card";
-    button.innerHTML = `<strong>${level.label}</strong><span>${level.count} знаков</span><small>${done} изучено</small><span class="level-percent">${percent}%</span><span class="level-track"><span style="transform:scaleX(${percent / 100})"></span></span>`;
+    button.innerHTML = `<strong>${level.label}</strong><span>${level.count} знаков</span><small>${done} отработано</small><span class="level-percent">${percent}%</span><span class="level-track"><span style="transform:scaleX(${percent / 100})"></span></span>`;
     button.addEventListener("click", () => startHskLevel(level.key));
     host.appendChild(button);
   });
@@ -1128,6 +1138,7 @@ function authErrorText(error) {
 // --- события --------------------------------------------------------------
 
 function wireEvents() {
+  $("memoryOpen").addEventListener("click", () => showView("memoryView"));
   $("homeButton").addEventListener("click", () => showView("homeView"));
   document.querySelectorAll("[data-back-home]").forEach((button) => button.addEventListener("click", () => showView("homeView")));
   $("verificationButton").addEventListener("click", () => { renderVerification(); showView("verificationView"); });
@@ -1271,7 +1282,7 @@ init();
 window.__hsk = {
   get progress() { return progress; },
   get session() { return session; },
-  sync, audio, motion,
+  sync, audio, motion, memory,
   openWordCard, closeWordCard,
   startHskLevel, startSingleCharacter,
   completeCurrentItem: (mistakes = 0) => completeCurrentItem(mistakes),

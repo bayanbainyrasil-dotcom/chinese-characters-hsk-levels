@@ -107,16 +107,17 @@ export function collectErrors(page) {
  * Пишет знак по-настоящему: ведёт указателем по срединным линиям черт,
  * как это делает палец, Apple Pencil или мышка.
  */
-export async function drawCharacter(page, character) {
+export async function drawCharacter(page, character, target = "#hanziTarget") {
   const data = JSON.parse(fs.readFileSync(path.join(STROKE_DATA_DIR, `${character}.json`), "utf8"));
-  const box = await page.locator("#hanziTarget svg").boundingBox();
+  await page.locator(target).scrollIntoViewIfNeeded();
+  const box = await page.locator(`${target} svg`).boundingBox();
   if (!box) throw new Error("холст письма не найден");
   const size = box.width;
   const padding = Math.max(10, Math.round(size * 0.045));
   const scale = (size - padding * 2) / 1024;
   const toScreen = ([x, y]) => ({
     x: box.x + padding + x * scale,
-    y: box.y + size - padding - y * scale,
+    y: box.y + size - padding - (y + 124) * scale,
   });
   for (const median of data.medians) {
     const points = median.length > 6 ? median.filter((_, index) => index % 2 === 0 || index === median.length - 1) : median;
