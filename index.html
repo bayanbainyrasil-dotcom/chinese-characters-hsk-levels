@@ -84,6 +84,14 @@
   <div class="offline-banner hidden" id="offlineBanner">Офлайн-режим · уже открытые иероглифы доступны</div>
   <div class="app">
   <main class="shell">
+    <div class="notice-card storage-alert hidden" id="progressAlert" role="alert">
+      <p class="notice-title" id="progressAlertTitle">Запись прогресса повреждена</p>
+      <p class="source-note" id="progressAlertText"></p>
+      <div class="action-row two">
+        <button class="secondary-button" id="progressRecoveryDownload" type="button">Скачать данные для восстановления</button>
+        <button class="text-button" id="progressAlertDismiss" type="button">Скрыть</button>
+      </div>
+    </div>
     <header class="site-head">
       <button class="brand" id="homeButton" type="button" title="На главную">
         <span class="brand-mark">汉字</span>
@@ -234,6 +242,11 @@
       <div class="metric-grid"><div><strong id="totalAttempts">0</strong><span>написаний</span></div><div><strong id="cleanAttempts">0</strong><span>без ошибок</span></div><div><strong id="practiceDays">0</strong><span>дней практики</span></div></div>
       <div class="section-label"><span>По разделам</span><span></span></div><div class="progress-list" id="progressList"></div>
       <p class="source-note" id="migrationNote"></p>
+      <div class="notice-card hidden" id="progressRecoveryBlock">
+        <p class="notice-title">Есть аварийные копии повреждённой записи</p>
+        <p class="source-note">Когда-то запись прогресса не удалось прочитать. Исходная строка сохранена без изменений; автоматически её не восстановить, но файл можно передать для ручного разбора.</p>
+        <button class="secondary-button" id="progressRecoveryDownloadAlt" type="button">Скачать данные для восстановления</button>
+      </div>
       <div class="action-row two">
         <button class="secondary-button" id="restoreBackupButton" type="button">Восстановить из резервной копии</button>
         <button class="danger-button" id="resetProgressButton" type="button">Сбросить учебный прогресс</button>

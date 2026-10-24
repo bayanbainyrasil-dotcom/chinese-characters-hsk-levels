@@ -43,6 +43,35 @@ export function removeRaw(key) {
   try { localStorage.removeItem(key); } catch (_) { /* приватный режим */ }
 }
 
+/** Запись, которая засчитывается только если значение действительно легло в localStorage. */
+export function writeRawDurable(key, value) {
+  try {
+    localStorage.setItem(key, value);
+    return localStorage.getItem(key) === value;
+  } catch (_) {
+    return false;
+  }
+}
+
+/** Ключи localStorage с данным префиксом; при недоступном хранилище — пустой список. */
+export function listKeys(prefix) {
+  const keys = new Set();
+  try {
+    for (let i = 0; i < localStorage.length; i += 1) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith(prefix)) keys.add(key);
+    }
+  } catch (_) { /* приватный режим */ }
+  for (const key of memoryFallback.keys()) if (key.startsWith(prefix)) keys.add(key);
+  return [...keys].sort();
+}
+
+/** Только для автотестов: сбрасывает запасное хранилище в памяти. */
+export function __resetStorageForTests() {
+  memoryFallback = new Map();
+  warned = false;
+}
+
 export function readJson(key, fallback) {
   try {
     const parsed = JSON.parse(readRaw(key));

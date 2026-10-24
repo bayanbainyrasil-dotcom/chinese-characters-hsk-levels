@@ -1,7 +1,7 @@
 // Состояние обучения: форма данных, слияние и миграция старого ключа.
 // Правило номер один: старый прогресс не удаляется и не обнуляется никогда.
 
-import { KEYS, readJson, writeJson, readRaw, writeRaw, uuid } from "./storage.js";
+import { KEYS, readJson, writeJson, readRaw, writeRaw, writeRawDurable, listKeys, uuid } from "./storage.js";
 
 export const BUCKETS = ["strokes", "rules", "radicals", "hsk"];
 
@@ -127,13 +127,100 @@ export function migrationInfo() {
   return readJson(KEYS.migration, null);
 }
 
+// --- Повреждённая запись прогресса ------------------------------------------
+// Если в боевом ключе лежит строка, которую нельзя разобрать, приложение не
+// пытается её «починить», но и не имеет права затереть её следующим сохранением.
+// Сначала исходная строка копируется в отдельный аварийный ключ (каждая новая
+// порча — в свой ключ, прежние копии не трогаются). Если копию записать не
+// удалось (квота, запрет записи), боевой ключ блокируется от перезаписи до тех
+// пор, пока копия не ляжет, а строка остаётся доступной для скачивания.
+
+export const CORRUPT_PREFIX = "bishun_hsk30_progress_corrupt_v1:";
+
+let health = { status: "ok" };
+
+function isUsableProgressRaw(raw) {
+  if (raw === null || raw === undefined || raw === "") return true; // пусто — терять нечего
+  try {
+    const parsed = JSON.parse(raw);
+    return Boolean(parsed) && typeof parsed === "object" && !Array.isArray(parsed);
+  } catch (_) {
+    return false;
+  }
+}
+
+function quarantineCopies() {
+  const copies = [];
+  for (const key of listKeys(CORRUPT_PREFIX)) {
+    try {
+      const entry = JSON.parse(readRaw(key));
+      if (entry && typeof entry.raw === "string") copies.push({ key, ...entry });
+    } catch (_) { /* чужой мусор в ключе с нашим префиксом не трогаем */ }
+  }
+  return copies;
+}
+
+function quarantine(raw) {
+  const existing = quarantineCopies().find((copy) => copy.raw === raw);
+  if (existing) return existing.key;
+  let key = `${CORRUPT_PREFIX}${Date.now()}`;
+  for (let n = 1; readRaw(key) !== null; n += 1) key = `${CORRUPT_PREFIX}${Date.now()}-${n}`;
+  const entry = JSON.stringify({ savedAt: new Date().toISOString(), sourceKey: KEYS.progress, raw });
+  return writeRawDurable(key, entry) ? key : null;
+}
+
+/** Проверяет боевой ключ и при порче делает аварийную копию. Повторный вызов безопасен. */
+function guardProgressKey() {
+  const raw = readRaw(KEYS.progress);
+  if (isUsableProgressRaw(raw)) {
+    if (health.status === "unsaved") health = { status: "ok" };
+    return true;
+  }
+  const key = quarantine(raw);
+  health = key
+    ? { status: "quarantined", key, raw, detectedAt: health.detectedAt || new Date().toISOString() }
+    : { status: "unsaved", raw, detectedAt: health.detectedAt || new Date().toISOString() };
+  return Boolean(key);
+}
+
+/**
+ * Состояние записи прогресса для интерфейса:
+ * ok — всё в порядке; quarantined — запись была повреждена, исходная строка
+ * сохранена в аварийной копии; unsaved — копию сохранить не удалось, боевой
+ * ключ не перезаписывается, данные этой сессии живут только в памяти.
+ */
+export function progressHealth() {
+  const copies = quarantineCopies().length;
+  if (health.status === "ok" && copies) return { status: "has-copies", copies };
+  return { ...health, copies };
+}
+
+/** Файл для ручного восстановления: все аварийные копии как есть, без попытки разбора. */
+export function recoveryBundle() {
+  const copies = quarantineCopies().map(({ savedAt, sourceKey, raw }) => ({ savedAt, sourceKey, raw }));
+  if (health.status === "unsaved" && !copies.some((c) => c.raw === health.raw)) {
+    copies.push({ savedAt: health.detectedAt, sourceKey: KEYS.progress, raw: health.raw, notSavedInStorage: true });
+  }
+  return { schema: "bishun-progress-recovery-v1", createdAt: new Date().toISOString(), copies };
+}
+
+/** Только для автотестов. */
+export function __resetProgressHealthForTests() {
+  health = { status: "ok" };
+}
+
 export function loadProgress() {
+  guardProgressKey();
   ensureMigration();
+  if (health.status === "unsaved" || health.status === "quarantined") return defaultProgress();
   return normalize(readJson(KEYS.progress, null));
 }
 
 export function saveProgress(progress) {
   progress.updatedAt = Date.now();
+  // Перед каждой записью: если в ключе всё ещё лежит неразобранная строка,
+  // а копию сделать не удалось — не пишем, чтобы не уничтожить её.
+  if (!guardProgressKey()) return progress;
   writeJson(KEYS.progress, progress);
   return progress;
 }

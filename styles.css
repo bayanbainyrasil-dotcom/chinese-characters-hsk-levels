@@ -148,6 +148,9 @@ h2 { margin: 0 0 10px; font: 400 clamp(29px, 8vw, 38px)/1.08 Georgia, serif; let
 .notice-card { padding: 14px 15px; border: 1px solid var(--line); border-radius: 4px; background: var(--surface); }
 .notice-card .notice-title { margin: 0 0 6px; color: var(--text); font-size: 13px; font-weight: 600; }
 .notice-card .source-note { margin: 0; }
+.storage-alert { margin: 12px 0; border-color: var(--amber); }
+.storage-alert .action-row { margin-top: 10px; }
+#progressRecoveryBlock { margin: 12px 0; }
 
 .rule-list { display: grid; margin: 8px 0 22px; }
 .rule-card { display: grid; grid-template-columns: 50px minmax(0, 1fr); gap: 14px; padding: 15px 0; border-bottom: 1px solid var(--line); }

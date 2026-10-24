@@ -15,7 +15,9 @@ export function createReviewSession({loadWriter,getClient,getUser}) {
   let block={count:0,failures:{},excluded:[],remembered:0,practice:0}; let started=0;
   const sync=new ReviewSync({store,getClient,getUser,onStatus:text=>{$('memorySyncState').textContent=text;}});
   function error(e){$('memoryMessage').textContent=e?.message||'Не удалось сохранить. Не закрывайте страницу';}
-  async function safe(action){if(busy)return;busy=true;$('memoryStart').disabled=true;$('memoryNewOnly').disabled=true;$('memoryResume').disabled=true;try{await action();}catch(e){error(e);}finally{busy=false;$('memoryStart').disabled=false;$('memoryNewOnly').disabled=false;$('memoryResume').disabled=false;if(reopen&&active){reopen=false;await open();}}}
+  // queue:true — действие не отбрасывается, а ждёт текущего (выбранный файл импорта не должен теряться молча).
+  let idle=Promise.resolve();
+  async function safe(action,{queue=false}={}){if(busy){if(!queue)return;while(busy)await idle;}busy=true;let release;idle=new Promise(r=>{release=r;});$('memoryStart').disabled=true;$('memoryNewOnly').disabled=true;$('memoryResume').disabled=true;try{await action();}catch(e){error(e);}finally{busy=false;release();$('memoryStart').disabled=false;$('memoryNewOnly').disabled=false;$('memoryResume').disabled=false;if(reopen&&active){reopen=false;await open();}}}
   let lastSize=0,boardObserver=null;
   function syncSize(){if(!writer||!active||!$('memoryBoard'))return;const size=Math.max(220,Math.min(360,$('memoryBoard').getBoundingClientRect().width));if(!size||Math.abs(size-lastSize)<2)return;lastSize=size;try{writer.updateDimensions?.({width:size,height:size,padding:Math.max(10,Math.round(size*.045))});}catch{}}
   function observeMemoryBoard(){const b=$('memoryBoard');if(!b||boardObserver||typeof ResizeObserver!=='function')return;boardObserver=new ResizeObserver(()=>syncSize());boardObserver.observe(b);}
@@ -192,7 +194,7 @@ export function createReviewSession({loadWriter,getClient,getUser}) {
     const data=JSON.parse(await file.text());const es=store.validateImport(data);
     if(!confirm(`Добавить ${es.length} попыток из копии? Текущая история останется.`))return;
     await store.import(data);notes=await store.notes();await dashboard();$('memoryMessage').textContent='История объединена. Расписание пересчитано.';sync.flush();
-  }finally{$('memoryImport').value='';}});
+  }finally{$('memoryImport').value='';}},{queue:true});
   $('memoryRebind').onclick=()=>safe(async()=>{
     const user=getUser();if(!user)throw new Error('Сначала войдите в аккаунт в настройках сайта');
     const owner=await store.get('sync-owner');
