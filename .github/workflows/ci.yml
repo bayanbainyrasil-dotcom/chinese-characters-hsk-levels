@@ -1,0 +1,39 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright Browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Download stroke definitions
+        run: |
+          mkdir -p /tmp/hwd
+          npm pack hanzi-writer-data@2.0.1
+          tar -xzf hanzi-writer-data-2.0.1.tgz -C /tmp/hwd
+
+      - name: Run Test Suite (107 tests)
+        run: npm test
+        env:
+          HANZI_DATA: /tmp/hwd/package
+
+      - name: Run Lighthouse Audits
+        run: npm run lighthouse
