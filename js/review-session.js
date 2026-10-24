@@ -189,12 +189,13 @@ export function createReviewSession({loadWriter,getClient,getUser}) {
   for(const id of ['memoryLevel','memoryLimit'])$(id).onchange=()=>safe(async()=>{settings={level:$('memoryLevel').value,limit:Number($('memoryLimit').value)};await store.set('settings',settings);await dashboard();});
   async function downloadBackup(){const blob=new Blob([JSON.stringify(await store.export(),null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=`hanzi-memory-${localDay()}.json`;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
   $('memoryExport').onclick=()=>safe(downloadBackup);
-  $('memoryImport').onchange=()=>safe(async()=>{try{
-    const file=$('memoryImport').files[0];if(!file)return;if(file.size>10*1024*1024)throw new Error('Файл больше 10 МБ');
+  // Файл берём в момент выбора: если раздел занят, импорт ждёт в очереди, и второй выбор не подменит первый.
+  $('memoryImport').onchange=()=>{const file=$('memoryImport').files[0];return safe(async()=>{try{
+    if(!file)return;if(file.size>10*1024*1024)throw new Error('Файл больше 10 МБ');
     const data=JSON.parse(await file.text());const es=store.validateImport(data);
     if(!confirm(`Добавить ${es.length} попыток из копии? Текущая история останется.`))return;
     await store.import(data);notes=await store.notes();await dashboard();$('memoryMessage').textContent='История объединена. Расписание пересчитано.';sync.flush();
-  }finally{$('memoryImport').value='';}},{queue:true});
+  }finally{$('memoryImport').value='';}},{queue:true});};
   $('memoryRebind').onclick=()=>safe(async()=>{
     const user=getUser();if(!user)throw new Error('Сначала войдите в аккаунт в настройках сайта');
     const owner=await store.get('sync-owner');

@@ -329,3 +329,51 @@ test("кнопки загрузки копии показывают фокус �
   }
   await context.close();
 });
+
+test("Назад после выхода кнопкой приложения не возвращает в закрытый раздел", async () => {
+  const context = await browser.newContext();
+  await serveStrokeData(context);
+  await stubBackend(context);
+  const page = await context.newPage();
+  const view = () => page.evaluate(() => document.body.dataset.view);
+  await page.goto(base);
+  await page.waitForFunction(() => window.__hsk);
+  // A: память → «← Главная» → #hsk → Назад = главная
+  await page.locator("#memoryOpen").click();
+  await page.locator("#memoryStart").waitFor({ state: "visible" });
+  await page.locator("#memoryView [data-back-home]").click();
+  await page.waitForFunction(() => document.body.dataset.view === "homeView");
+  await page.evaluate(() => window.__hsk.showView("hskView"));
+  await page.goBack();
+  await page.waitForTimeout(300);
+  assert.equal(await view(), "homeView", "A: назад с #hsk — на главную");
+  // B: #hsk → упражнение → кнопка выхода → #progress → Назад = список уровней
+  await page.evaluate(() => window.__hsk.showView("hskView"));
+  await page.evaluate(() => window.__hsk.startHskLevel("1-2"));
+  await page.locator("#writingBoard #hanziTarget svg").waitFor();
+  await page.locator("#practiceBackButton").click();
+  await page.waitForFunction(() => document.body.dataset.view !== "practiceView");
+  const afterExit = await view();
+  await page.evaluate(() => window.__hsk.showView("progressView"));
+  await page.goBack();
+  await page.waitForTimeout(300);
+  assert.equal(await view(), afterExit, `B: назад с #progress — туда, куда вышли из упражнения (${afterExit})`);
+  await context.close();
+});
+
+test("закрытое кнопкой упражнение не открывается снова через «Назад»", async () => {
+  const context = await browser.newContext();
+  await serveStrokeData(context);
+  await stubBackend(context);
+  const page = await context.newPage();
+  await page.goto(base);
+  await page.waitForFunction(() => window.__hsk);
+  await page.evaluate(() => window.__hsk.showView("hskView"));
+  await page.evaluate(() => window.__hsk.startHskLevel("1-2"));
+  await page.locator("#writingBoard #hanziTarget svg").waitFor();
+  await page.locator("#practiceBackButton").click();
+  await page.waitForFunction(() => document.body.dataset.view === "hskView");
+  for (let i = 0; i < 2; i += 1) { await page.goBack(); await page.waitForTimeout(250); }
+  assert.notEqual(await page.evaluate(() => document.body.dataset.view), "practiceView");
+  await context.close();
+});

@@ -8,7 +8,7 @@ import {
   merge as mergeProgress, normalize as normalizeProgress, todayKey,
   masteredHsk, completedCount, migrationInfo, restoreBackup, progressHealth, recoveryBundle,
 } from "./js/progress.js";
-import { KEYS, readJson, writeJson } from "./js/storage.js";
+import { KEYS, readJson, writeJson, readStoredRaw } from "./js/storage.js";
 import { createReviewSession } from "./js/review-session.js";
 import { supabaseClient } from "./js/sync.js";
 import { SyncEngine } from "./js/sync.js";
@@ -105,6 +105,7 @@ const sync = new SyncEngine({
   applyRemote: (merged) => {
     progress = merged;
     persistProgress(progress);
+    renderProgressAlert();
     applySettings(progress.settings, { persist: false });
     renderHomeProgress();
     if (currentView === "progressView") renderProgressView();
@@ -156,25 +157,19 @@ function showView(id, { updateHash = true } = {}) {
   if (id === "adminView") configureAdminGate();
 
   if (updateHash && typeof window !== "undefined" && window.location) {
-    const targetHash = HASH_BY_VIEW[id];
-    if (targetHash && window.location.hash !== targetHash) {
+    // Новая запись истории, если адрес или раздел текущей записи другой. Так
+    // «Назад» всегда ведёт в предыдущий открытый раздел, в том числе после
+    // выхода кнопкой приложения. У упражнения и памяти нет своего адреса:
+    // перезагрузка, как и раньше, ведёт на главную (память) или в список (упражнение).
+    const path = window.location.pathname + window.location.search;
+    const url = HASH_BY_VIEW[id] || (id === "practiceView" ? window.location.href : path);
+    const sameUrl = new URL(url, window.location.href).href === window.location.href;
+    if (!sameUrl || history.state?.view !== id) {
       try {
-        history.pushState({ view: id }, "", targetHash);
+        history.pushState({ view: id }, "", url);
       } catch (_) {
-        window.location.hash = targetHash;
+        if (HASH_BY_VIEW[id]) window.location.hash = HASH_BY_VIEW[id];
       }
-    } else if (id === "homeView" && window.location.hash) {
-      try {
-        history.pushState({ view: id }, "", window.location.pathname + window.location.search);
-      } catch (_) {
-        window.location.hash = "";
-      }
-    } else if ((id === "practiceView" || id === "memoryView") && history.state?.view !== id) {
-      // У упражнения и раздела памяти нет своего адреса (перезагрузка, как и
-      // раньше, ведёт на главную), но «Назад» должен вернуть туда, откуда они
-      // открыты, а не на шаг раньше.
-      const url = id === "memoryView" ? window.location.pathname + window.location.search : window.location.href;
-      try { history.pushState({ view: id }, "", url); } catch (_) { /* старые браузеры */ }
     }
   }
 }
@@ -327,7 +322,7 @@ function completedForHskLevel(level) {
 function startSession(config) {
   const items = config.items.filter((item) => item?.char);
   if (!items.length) { showToast("В этом наборе пока нет упражнений"); return; }
-  session = { ...config, items, index: 0, repeatGoal: config.repeatGoal || 1 };
+  session = { ...config, items, index: 0, repeatGoal: config.repeatGoal || 1, closed: false };
   const bucket = progress.completed[session.bucket] || (progress.completed[session.bucket] = {});
   const firstIncomplete = items.findIndex((item) => Number(bucket[progressKeyFor(item)] || 0) < session.repeatGoal);
   session.index = firstIncomplete >= 0 ? firstIncomplete : 0;
@@ -1151,7 +1146,8 @@ async function importBackup(file, input) {
     const nextProgress = backup.progress?.completed ? mergeProgress(progress, backup.progress) : null;
     if (nextProgress) {
       persistProgress(nextProgress);
-      const stored = readJson(KEYS.progress, null);
+      let stored = null;
+      try { stored = JSON.parse(readStoredRaw(KEYS.progress)); } catch (_) { stored = null; }
       if (!stored || stored.updatedAt !== nextProgress.updatedAt) {
         renderProgressAlert();
         showToast("Не удалось сохранить прогресс из копии — данные на устройстве не изменены");
@@ -1181,6 +1177,9 @@ async function importBackup(file, input) {
     }
     renderAdminChanges();
     showToast("Копия импортирована и объединена");
+  } catch (error) {
+    console.warn("Импорт копии прерван", error);
+    showToast("Импорт прерван. Проверьте раздел «Прогресс» и при необходимости повторите");
   } finally {
     // Сбрасываем то поле, через которое пришёл файл, — иначе тот же файл
     // нельзя выбрать повторно (браузер не пришлёт change).
@@ -1283,7 +1282,7 @@ function wireEvents() {
   }));
   $("startRulesButton").addEventListener("click", startRuleSession);
   $("startRadicalsButton").addEventListener("click", () => startRadicalSession(RADICALS.filter((item) => item.day === activeRadicalDay), `Ключи · день ${activeRadicalDay}`));
-  $("practiceBackButton").addEventListener("click", () => { try { writer?.cancelQuiz(); } catch (_) {} showView(session?.returnView || "homeView"); if (session?.returnView === "hskView") renderHskLevels(); });
+  $("practiceBackButton").addEventListener("click", () => { try { writer?.cancelQuiz(); } catch (_) {} if (session) session.closed = true; showView(session?.returnView || "homeView"); if (session?.returnView === "hskView") renderHskLevels(); });
   $("animateButton").addEventListener("click", animateCurrentCharacter);
   $("retryButton").addEventListener("click", renderPracticeItem);
   $("skipButton").addEventListener("click", skipPracticeItem);
@@ -1368,7 +1367,8 @@ function wireEvents() {
   const handleLocationRoute = () => {
     const hash = window.location.hash;
     let targetView = VIEW_BY_HASH[hash] || "homeView";
-    if (history.state?.view === "practiceView" && session) targetView = "practiceView";
+    // В упражнение «Назад/Вперёд» возвращают, только если его не закрыли кнопкой.
+    if (history.state?.view === "practiceView" && session && !session.closed) targetView = "practiceView";
     if (history.state?.view === "memoryView" && !hash) targetView = "memoryView";
     if (targetView !== currentView) {
       showView(targetView, { updateHash: false });

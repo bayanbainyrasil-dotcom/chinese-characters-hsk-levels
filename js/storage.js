@@ -53,6 +53,11 @@ export function writeRawDurable(key, value) {
   }
 }
 
+/** Значение только из localStorage, без запасной копии в памяти (для проверки записи). */
+export function readStoredRaw(key) {
+  try { return localStorage.getItem(key); } catch (_) { return null; }
+}
+
 /** Ключи localStorage с данным префиксом; при недоступном хранилище — пустой список. */
 export function listKeys(prefix) {
   const keys = new Set();

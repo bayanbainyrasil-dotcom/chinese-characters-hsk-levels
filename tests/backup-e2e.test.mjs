@@ -300,6 +300,32 @@ test("bishun-memory-backup-v1: файл, выбранный пока разде�
   await context.close();
 });
 
+test("bishun-memory-backup-v1: два файла, выбранные подряд во время загрузки, импортируются оба", async () => {
+  const context = await browser.newContext({ viewport: { width: 420, height: 860 } });
+  await serveStrokeData(context);
+  await stubBackend(context);
+  await context.route("**/data/stroke-counts.json", async (route) => { await new Promise((r) => setTimeout(r, 1500)); await route.continue(); });
+  const page = await context.newPage();
+  page.on("dialog", (d) => d.accept());
+  await page.goto(base);
+  await page.waitForFunction(() => window.__hsk);
+  const mk = (n, char) => ({
+    id: `33333333-3333-4333-8333-${String(n).padStart(12, "0")}`, attemptId: `33333333-3333-4333-8333-${String(n).padStart(12, "0")}`,
+    char, kind: "introduce", mode: "learn", dueKey: "k", grade: null, assisted: false, mistakes: 0,
+    at: Date.UTC(2026, 9, 1, 10, n), day: "2026-10-01", device: "test", durationMs: 1000, version: 1,
+  });
+  const a = path.join(tmp, "m-a.json"), b = path.join(tmp, "m-b.json");
+  fs.writeFileSync(a, JSON.stringify({ schema: "bishun-memory-backup-v1", schedulerVersion: 1, events: [mk(1, "一")], notes: {} }));
+  fs.writeFileSync(b, JSON.stringify({ schema: "bishun-memory-backup-v1", schedulerVersion: 1, events: [mk(2, "二")], notes: {} }));
+  await page.locator("#memoryOpen").click();
+  await page.locator("#memoryImport").setInputFiles(a);
+  await page.locator("#memoryImport").setInputFiles(b);
+  await page.waitForFunction(async () => (await window.__hsk.memory.store.events()).length === 2, null, { timeout: 15000 });
+  await page.waitForFunction(() => !document.getElementById("memoryStart").disabled);
+  assert.deepEqual((await memoryState(page)).events.map((e) => e.char).sort(), ["一", "二"]);
+  await context.close();
+});
+
 // --- BUG-08 в настоящем браузере ---------------------------------------------
 
 test("BUG-08 в браузере: повреждённая запись сохраняется, пользователь видит сообщение и может скачать её", async () => {
