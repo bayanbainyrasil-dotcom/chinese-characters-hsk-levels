@@ -256,3 +256,25 @@ test("deep verification: hint disclosure protection and assisted attempt lock", 
   await context.close();
 });
 
+
+test("sign-in sends exactly one request per click and per Enter", async () => {
+  const context = await browser.newContext();
+  await serveStrokeData(context);
+  await stubBackend(context);
+  const page = await context.newPage();
+  const hits = [];
+  page.on("request", (r) => { if (r.url().includes("/auth/v1/token")) hits.push(r.url()); });
+  await page.goto(`${base}#settings`);
+  await page.waitForFunction(() => window.__hsk);
+  await page.fill("#authEmail", "test@example.com");
+  await page.fill("#authPassword", "secret123");
+  await page.locator("#authSignIn").click();
+  await page.waitForFunction(() => document.getElementById("authMessage").textContent.length > 0);
+  await page.waitForTimeout(500);
+  assert.equal(hits.length, 1, "клик — один запрос");
+  hits.length = 0;
+  await page.locator("#authPassword").press("Enter");
+  await page.waitForTimeout(800);
+  assert.equal(hits.length, 1, "Enter — один запрос");
+  await context.close();
+});

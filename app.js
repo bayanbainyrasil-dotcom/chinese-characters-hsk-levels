@@ -1195,7 +1195,15 @@ function resumeLastSession() {
 
 // --- вход в аккаунт -------------------------------------------------------
 
+let authInFlight = false;
+
 async function handleAuthAction(action) {
+  if (authInFlight) return; // повторное нажатие, пока ждём сервер, не отправляет второй запрос
+  authInFlight = true;
+  try { await runAuthAction(action); } finally { authInFlight = false; }
+}
+
+async function runAuthAction(action) {
   const email = $("authEmail")?.value.trim();
   const password = $("authPassword")?.value;
   const message = $("authMessage");
@@ -1344,7 +1352,7 @@ function wireEvents() {
 
   $("authForm")?.addEventListener("submit", (e) => { e.preventDefault(); handleAuthAction("signin"); });
   $("authGoogle").addEventListener("click", () => handleAuthAction("google"));
-  $("authSignIn").addEventListener("click", () => handleAuthAction("signin"));
+  // «Войти» — кнопка отправки формы: её клик и Enter приходят одним событием submit.
   $("authSignUp").addEventListener("click", () => handleAuthAction("signup"));
   $("authMagicLink").addEventListener("click", () => handleAuthAction("link"));
   $("authGuest").addEventListener("click", () => { showToast("Занимаемся без аккаунта — прогресс останется на этом устройстве"); showView("homeView"); });
