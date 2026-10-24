@@ -71,7 +71,7 @@ test('leaving and reopening during a delayed hint restores usable dashboard with
 });
 test('warmed offline reload retains mnemonic modules and renders the saved practice card',async()=>{
  const {context,page}=await open('好',false);await page.evaluate(()=>navigator.serviceWorker.ready);await page.waitForFunction(()=>navigator.serviceWorker.controller);
- const cached=await page.evaluate(async()=>{const c=await caches.open('bishun-shell-v24');return Promise.all(['mnemonic-ids','mnemonic-data','mnemonic-panel'].map(async name=>!!await c.match('js/'+name+'.js')));});assert.deepEqual(cached,[true,true,true]);
+ const cached=await page.evaluate(async()=>{const name=(await caches.keys()).find(k=>/^bishun-shell-v\d+$/.test(k));const c=await caches.open(name);return Promise.all(['mnemonic-ids','mnemonic-data','mnemonic-panel'].map(async name=>!!await c.match('js/'+name+'.js')));});assert.deepEqual(cached,[true,true,true]);
  await context.setOffline(true);await page.reload();await page.waitForFunction(()=>window.__hsk);await page.locator('#memoryOpen').click();await page.locator('#memoryResume').click();await page.locator('#mnemonicNote').waitFor();
  assert.deepEqual(await page.locator('.mnemonic-position').allTextContents(),['Слева','Справа']);await context.close();
 });
