@@ -1,0 +1,780 @@
+commit: a8b3c1ad3329928accda5f6dd7068f4d49a2fd73
+node v22.23.4, playwright 1.64.1, chromium Google Chrome for Testing 153.0.8010.12 
+cmd: CHROME_PATH=... HANZI_DATA=/tmp/hwd/package npm test
+
+> chinese-characters-hsk-levels@2.0.0 test
+> node --test --test-concurrency=1 tests/unit.test.mjs tests/review-scheduler.test.mjs tests/review-store.test.mjs tests/review-sync.test.mjs tests/e2e.test.mjs tests/review-e2e.test.mjs tests/audio.test.mjs tests/mnemonic.test.mjs tests/mnemonic-e2e.test.mjs tests/audit-verification.test.mjs tests/stroke-recognition.test.mjs tests/time-scheduler-fsm.test.mjs tests/migration-compatibility.test.mjs
+
+TAP version 13
+# Subtest: готовая запись берётся из хранилища, минуя функцию
+ok 1 - готовая запись берётся из хранилища, минуя функцию
+  ---
+  duration_ms: 1797.58834
+  type: 'test'
+  ...
+# Subtest: статический пак используется как основной источник
+ok 2 - статический пак используется как основной источник
+  ---
+  duration_ms: 757.501454
+  type: 'test'
+  ...
+# Subtest: до первого касания автоозвучка молчит — правило Safari
+ok 3 - до первого касания автоозвучка молчит — правило Safari
+  ---
+  duration_ms: 704.926049
+  type: 'test'
+  ...
+# Subtest: выключенный звук молчит даже по кнопке
+ok 4 - выключенный звук молчит даже по кнопке
+  ---
+  duration_ms: 1136.559166
+  type: 'test'
+  ...
+# Subtest: выключенная автоозвучка не мешает ручной кнопке
+ok 5 - выключенная автоозвучка не мешает ручной кнопке
+  ---
+  duration_ms: 948.398444
+  type: 'test'
+  ...
+# Subtest: после правильного написания знак звучит сам — один раз
+ok 6 - после правильного написания знак звучит сам — один раз
+  ---
+  duration_ms: 3779.942282
+  type: 'test'
+  ...
+# Subtest: при простом открытии страницы звук не играет
+ok 7 - при простом открытии страницы звук не играет
+  ---
+  duration_ms: 1363.382228
+  type: 'test'
+  ...
+# Subtest: кнопки обычной и медленной озвучки работают для знака
+ok 8 - кнопки обычной и медленной озвучки работают для знака
+  ---
+  duration_ms: 1193.216336
+  type: 'test'
+  ...
+# Subtest: в карточке слова озвучивается слово и каждый знак
+ok 9 - в карточке слова озвучивается слово и каждый знак
+  ---
+  duration_ms: 1639.446522
+  type: 'test'
+  ...
+# Subtest: аудио следующего знака подгружается заранее
+ok 10 - аудио следующего знака подгружается заранее
+  ---
+  duration_ms: 1288.220375
+  type: 'test'
+  ...
+# Subtest: генератор и браузер считают одинаковые имена файлов
+ok 11 - генератор и браузер считают одинаковые имена файлов
+  ---
+  duration_ms: 547.533209
+  type: 'test'
+  ...
+# Subtest: direct hash routing opens nested views and popstate navigates cleanly
+ok 12 - direct hash routing opens nested views and popstate navigates cleanly
+  ---
+  duration_ms: 1188.704599
+  type: 'test'
+  ...
+# Subtest: progressView has accessible export and import controls for regular learners
+ok 13 - progressView has accessible export and import controls for regular learners
+  ---
+  duration_ms: 791.708146
+  type: 'test'
+  ...
+# Subtest: auth credentials are in a form and auth form submit triggers validation
+ok 14 - auth credentials are in a form and auth form submit triggers validation
+  ---
+  duration_ms: 853.193165
+  type: 'test'
+  ...
+# Subtest: memoryBoard prevents touch scrolling and mnemonic panel displays similar character distinctions
+ok 15 - memoryBoard prevents touch scrolling and mnemonic panel displays similar character distinctions
+  ---
+  duration_ms: 1248.725912
+  type: 'test'
+  ...
+# Subtest: deep verification: all hash routes, unknown hash fallback, reload, and outside touch scroll
+ok 16 - deep verification: all hash routes, unknown hash fallback, reload, and outside touch scroll
+  ---
+  duration_ms: 1308.8044
+  type: 'test'
+  ...
+# Subtest: deep verification: hint disclosure protection and assisted attempt lock
+ok 17 - deep verification: hint disclosure protection and assisted attempt lock
+  ---
+  duration_ms: 1341.744055
+  type: 'test'
+  ...
+# Subtest: страница поднимается без ошибок в консоли
+ok 18 - страница поднимается без ошибок в консоли
+  ---
+  duration_ms: 1635.593498
+  type: 'test'
+  ...
+# Subtest: старый прогресс переживает обновление и попадает в резервную копию
+ok 19 - старый прогресс переживает обновление и попадает в резервную копию
+  ---
+  duration_ms: 1250.863308
+  type: 'test'
+  ...
+# Subtest: продолжение занятия видно на главной
+ok 20 - продолжение занятия видно на главной
+  ---
+  duration_ms: 657.935114
+  type: 'test'
+  ...
+# Subtest: знак пишется указателем, повторение засчитывается и переживает перезагрузку
+ok 21 - знак пишется указателем, повторение засчитывается и переживает перезагрузку
+  ---
+  duration_ms: 3647.552711
+  type: 'test'
+  ...
+# Subtest: пять повторений закрывают знак и сохраняются после перезагрузки
+ok 22 - пять повторений закрывают знак и сохраняются после перезагрузки
+  ---
+  duration_ms: 1149.202545
+  type: 'test'
+  ...
+# Subtest: пример открывает карточку с разбором по знакам
+ok 23 - пример открывает карточку с разбором по знакам
+  ---
+  duration_ms: 1031.101429
+  type: 'test'
+  ...
+# Subtest: разбор 汉语 совпадает с эталоном из задания
+ok 24 - разбор 汉语 совпадает с эталоном из задания
+  ---
+  duration_ms: 663.770686
+  type: 'test'
+  ...
+# Subtest: карточка закрывается клавишей Escape, фоном, кнопкой и «Назад»
+ok 25 - карточка закрывается клавишей Escape, фоном, кнопкой и «Назад»
+  ---
+  duration_ms: 2118.046187
+  type: 'test'
+  ...
+# Subtest: в карточке фокус остаётся внутри окна
+ok 26 - в карточке фокус остаётся внутри окна
+  ---
+  duration_ms: 801.820648
+  type: 'test'
+  ...
+# Subtest: нажатие на знак в разборе открывает его письмо
+ok 27 - нажатие на знак в разборе открывает его письмо
+  ---
+  duration_ms: 1578.49755
+  type: 'test'
+  ...
+# Subtest: на телефоне карточка приходит снизу как bottom sheet
+ok 28 - на телефоне карточка приходит снизу как bottom sheet
+  ---
+  duration_ms: 1043.263753
+  type: 'test'
+  ...
+# Subtest: поиск открывает подробную карточку слова
+ok 29 - поиск открывает подробную карточку слова
+  ---
+  duration_ms: 1359.181723
+  type: 'test'
+  ...
+# Subtest: очередь синхронизации копит события с уникальными идентификаторами
+ok 30 - очередь синхронизации копит события с уникальными идентификаторами
+  ---
+  duration_ms: 801.510497
+  type: 'test'
+  ...
+# Subtest: без интернета работа продолжается, а индикатор честно об этом говорит
+ok 31 - без интернета работа продолжается, а индикатор честно об этом говорит
+  ---
+  duration_ms: 967.783076
+  type: 'test'
+  ...
+# Subtest: переключатель темы меняет оформление и запоминается
+ok 32 - переключатель темы меняет оформление и запоминается
+  ---
+  duration_ms: 1741.690946
+  type: 'test'
+  ...
+# Subtest: при prefers-reduced-motion переходы почти мгновенные
+ok 33 - при prefers-reduced-motion переходы почти мгновенные
+  ---
+  duration_ms: 716.987549
+  type: 'test'
+  ...
+# Subtest: настройки звука сохраняются и уходят в очередь синхронизации
+ok 34 - настройки звука сохраняются и уходят в очередь синхронизации
+  ---
+  duration_ms: 1353.31316
+  type: 'test'
+  ...
+# Subtest: гостевой режим не требует аккаунта
+ok 35 - гостевой режим не требует аккаунта
+  ---
+  duration_ms: 931.367358
+  type: 'test'
+  ...
+# Subtest: админ-раздел не проверяет пароль в браузере
+ok 36 - админ-раздел не проверяет пароль в браузере
+  ---
+  duration_ms: 1240.496054
+  type: 'test'
+  ...
+# Subtest: ошибки входа показываются по-русски
+ok 37 - ошибки входа показываются по-русски
+  ---
+  duration_ms: 628.614759
+  type: 'test'
+  ...
+# Subtest: кнопка Google появляется только если провайдер включён на сервере
+ok 38 - кнопка Google появляется только если провайдер включён на сервере
+  ---
+  duration_ms: 1415.491279
+  type: 'test'
+  ...
+# Subtest: без бэкенда вместо нерабочих кнопок входа показывается пояснение
+ok 39 - без бэкенда вместо нерабочих кнопок входа показывается пояснение
+  ---
+  duration_ms: 658.976594
+  type: 'test'
+  ...
+# Subtest: во фронтенде нет ни PIN, ни его хеша
+ok 40 - во фронтенде нет ни PIN, ни его хеша
+  ---
+  duration_ms: 2.110751
+  type: 'test'
+  ...
+# Subtest: поле письма не прокручивает страницу пальцем
+ok 41 - поле письма не прокручивает страницу пальцем
+  ---
+  duration_ms: 1075.733335
+  type: 'test'
+  ...
+# Subtest: сервис-воркер регистрируется и не трогает пользовательские данные
+ok 42 - сервис-воркер регистрируется и не трогает пользовательские данные
+  ---
+  duration_ms: 528.868171
+  type: 'test'
+  ...
+# Subtest: Migration 1: Reading legacy progress_v1 automatically creates backup before migration
+ok 43 - Migration 1: Reading legacy progress_v1 automatically creates backup before migration
+  ---
+  duration_ms: 4.00498
+  type: 'test'
+  ...
+# Subtest: Migration 2: Repeated migrations are idempotent and do not overwrite initial backup
+ok 44 - Migration 2: Repeated migrations are idempotent and do not overwrite initial backup
+  ---
+  duration_ms: 0.573152
+  type: 'test'
+  ...
+# Subtest: Migration 3: Gracefully handles corrupted JSON without crashing or losing storage
+ok 45 - Migration 3: Gracefully handles corrupted JSON without crashing or losing storage
+  ---
+  duration_ms: 0.407552
+  type: 'test'
+  ...
+# Subtest: Migration 4: Sanitizes malformed fields (negative values, strings in numbers, invalid types)
+ok 46 - Migration 4: Sanitizes malformed fields (negative values, strings in numbers, invalid types)
+  ---
+  duration_ms: 0.325483
+  type: 'test'
+  ...
+# Subtest: Migration 5: IndexedDB ReviewStore rollback and validation safety on corrupted import
+ok 47 - Migration 5: IndexedDB ReviewStore rollback and validation safety on corrupted import
+  ---
+  duration_ms: 11.21457
+  type: 'test'
+  ...
+# Subtest: Migration 6: Backward compatibility for legacy clients reading progress_v1 key
+ok 48 - Migration 6: Backward compatibility for legacy clients reading progress_v1 key
+  ---
+  duration_ms: 0.271414
+  type: 'test'
+  ...
+# Subtest: story then parts survive reload/retry without full answer; assisted cannot pass cleanly
+ok 49 - story then parts survive reload/retry without full answer; assisted cannot pass cleanly
+  ---
+  duration_ms: 3211.777996
+  type: 'test'
+  ...
+# Subtest: practice explains left/right, saves personal text safely, and fits mobile
+ok 50 - practice explains left/right, saves personal text safely, and fits mobile
+  ---
+  duration_ms: 17078.698675
+  type: 'test'
+  ...
+# Subtest: failed hint persistence never discloses story or parts
+ok 51 - failed hint persistence never discloses story or parts
+  ---
+  duration_ms: 883.35265
+  type: 'test'
+  ...
+# Subtest: uncovered character has honest fallback and full help
+ok 52 - uncovered character has honest fallback and full help
+  ---
+  duration_ms: 1023.815643
+  type: 'test'
+  ...
+# Subtest: hint finishing after the final stroke cannot reveal content or offer clean success
+ok 53 - hint finishing after the final stroke cannot reveal content or offer clean success
+  ---
+  duration_ms: 2262.638354
+  type: 'test'
+  ...
+# Subtest: leaving and reopening during a delayed hint restores usable dashboard without disclosure
+ok 54 - leaving and reopening during a delayed hint restores usable dashboard without disclosure
+  ---
+  duration_ms: 940.237503
+  type: 'test'
+  ...
+# Subtest: warmed offline reload retains mnemonic modules and renders the saved practice card
+ok 55 - warmed offline reload retains mnemonic modules and renders the saved practice card
+  ---
+  duration_ms: 9035.592606
+  type: 'test'
+  ...
+# Subtest: component panels fit desktop and preserve spatial labels
+ok 56 - component panels fit desktop and preserve spatial labels
+  ---
+  duration_ms: 17302.938132
+  type: 'test'
+  ...
+# Subtest: 24 original aids match source IDS and actual writing repertoire
+ok 57 - 24 original aids match source IDS and actual writing repertoire
+  ---
+  duration_ms: 8.244584
+  type: 'test'
+  ...
+# Subtest: notes backup is optional, merges without replacement, and rejects malformed data atomically
+ok 58 - notes backup is optional, merges without replacement, and rejects malformed data atomically
+  ---
+  duration_ms: 20.084322
+  type: 'test'
+  ...
+# Subtest: untrusted note structure is rejected and HTML stays plain data
+ok 59 - untrusted note structure is rejected and HTML stays plain data
+  ---
+  duration_ms: 5.489296
+  type: 'test'
+  ...
+# Subtest: hint stages remain monotonic and never enter terminal events
+ok 60 - hint stages remain monotonic and never enter terminal events
+  ---
+  duration_ms: 2.421037
+  type: 'test'
+  ...
+# Subtest: stale guided attempts become full assistance in both learn and review
+ok 61 - stale guided attempts become full assistance in both learn and review
+  ---
+  duration_ms: 3.991632
+  type: 'test'
+  ...
+# Subtest: mobile and desktop memory entry has no overflow and hides all answer text
+ok 62 - mobile and desktop memory entry has no overflow and hides all answer text
+  ---
+  duration_ms: 4948.409861
+  type: 'test'
+  ...
+# Subtest: two clean writes interleaved with other characters, saved across reload; legacy unchanged
+ok 63 - two clean writes interleaved with other characters, saved across reload; legacy unchanged
+  ---
+  duration_ms: 3315.51361
+  type: 'test'
+  ...
+# Subtest: forgetting leads to guided practice; hint survives reload and cannot count as clean
+ok 64 - forgetting leads to guided practice; hint survives reload and cannot count as clean
+  ---
+  duration_ms: 4424.524758
+  type: 'test'
+  ...
+# Subtest: skip and leaving do not create a failed answer
+ok 65 - skip and leaving do not create a failed answer
+  ---
+  duration_ms: 2337.701401
+  type: 'test'
+  ...
+# Subtest: copy export includes memory separately; import rejects malformed file without replacing history
+ok 66 - copy export includes memory separately; import rejects malformed file without replacing history
+  ---
+  duration_ms: 2615.296992
+  type: 'test'
+  ...
+# Subtest: missing stroke data is a technical skip without lapse
+ok 67 - missing stroke data is a technical skip without lapse
+  ---
+  duration_ms: 1178.809045
+  type: 'test'
+  ...
+# Subtest: two motor misses are persisted even if canvas is cleared
+ok 68 - two motor misses are persisted even if canvas is cleared
+  ---
+  duration_ms: 2848.533832
+  type: 'test'
+  ...
+# Subtest: storage failure is visible and does not falsely complete a review
+ok 69 - storage failure is visible and does not falsely complete a review
+  ---
+  duration_ms: 2664.423519
+  type: 'test'
+  ...
+# Subtest: new character first teaches writing; all six level choices are available
+ok 70 - new character first teaches writing; all six level choices are available
+  ---
+  duration_ms: 1799.009999
+  type: 'test'
+  ...
+# Subtest: help survives closed tab, normal start, skip, and next block
+ok 71 - help survives closed tab, normal start, skip, and next block
+  ---
+  duration_ms: 10538.454193
+  type: 'test'
+  ...
+# Subtest: dictionary cues never disclose the target, including translations
+ok 72 - dictionary cues never disclose the target, including translations
+  ---
+  duration_ms: 754.751658
+  type: 'test'
+  ...
+# Subtest: legacy-practiced sign starts with diagnostic recall without gaining memory credit
+ok 73 - legacy-practiced sign starts with diagnostic recall without gaining memory credit
+  ---
+  duration_ms: 1433.132708
+  type: 'test'
+  ...
+# Subtest: legacy-free introduction is not remembered
+ok 74 - legacy-free introduction is not remembered
+  ---
+  duration_ms: 3.899462
+  type: 'test'
+  ...
+# Subtest: two initial recalls are spaced, then 10m then 1d
+ok 75 - two initial recalls are spaced, then 10m then 1d
+  ---
+  duration_ms: 1.18591
+  type: 'test'
+  ...
+# Subtest: small deck waits twice and early answers cannot advance
+ok 76 - small deck waits twice and early answers cannot advance
+  ---
+  duration_ms: 0.625277
+  type: 'test'
+  ...
+# Subtest: motor errors do not increase lapses or advance schedule
+ok 77 - motor errors do not increase lapses or advance schedule
+  ---
+  duration_ms: 0.285149
+  type: 'test'
+  ...
+# Subtest: help/forget requires practice, preserves history, allows interleaved learning
+ok 78 - help/forget requires practice, preserves history, allows interleaved learning
+  ---
+  duration_ms: 0.253698
+  type: 'test'
+  ...
+# Subtest: duplicate and arrival order do not alter replay; concurrent lapse wins
+ok 79 - duplicate and arrival order do not alter replay; concurrent lapse wins
+  ---
+  duration_ms: 0.892158
+  type: 'test'
+  ...
+# Subtest: stable memory requires distinct days spanning a week
+ok 80 - stable memory requires distinct days spanning a week
+  ---
+  duration_ms: 0.274518
+  type: 'test'
+  ...
+# Subtest: validation rejects future, malformed, unsafe fields and nonfinite values
+ok 81 - validation rejects future, malformed, unsafe fields and nonfinite values
+  ---
+  duration_ms: 0.843699
+  type: 'test'
+  ...
+# Subtest: daily limit survives replay and due reviews outrank new signs
+ok 82 - daily limit survives replay and due reviews outrank new signs
+  ---
+  duration_ms: 9.127464
+  type: 'test'
+  ...
+# Subtest: first guided practice opens recall; relearning practice requires a gap
+ok 83 - first guided practice opens recall; relearning practice requires a gap
+  ---
+  duration_ms: 0.56698
+  type: 'test'
+  ...
+# Subtest: short motor retry does not promote stage or count as spaced success
+ok 84 - short motor retry does not promote stage or count as spaced success
+  ---
+  duration_ms: 0.369568
+  type: 'test'
+  ...
+# Subtest: explicit new-only block bypasses due backlog but respects daily quota
+ok 85 - explicit new-only block bypasses due backlog but respects daily quota
+  ---
+  duration_ms: 1.414419
+  type: 'test'
+  ...
+# Subtest: guided relearning is not labelled successful until a clean recall
+ok 86 - guided relearning is not labelled successful until a clean recall
+  ---
+  duration_ms: 0.124142
+  type: 'test'
+  ...
+# Subtest: 30-day motor retry keeps interval stage and stability evidence unchanged
+ok 87 - 30-day motor retry keeps interval stage and stability evidence unchanged
+  ---
+  duration_ms: 0.334247
+  type: 'test'
+  ...
+# Subtest: clock bound is inclusive and late concurrent lapse recomputes earlier good
+ok 88 - clock bound is inclusive and late concurrent lapse recomputes earlier good
+  ---
+  duration_ms: 0.458392
+  type: 'test'
+  ...
+# Subtest: dedicated backup survives repeated migration with existing legacy markers
+ok 89 - dedicated backup survives repeated migration with existing legacy markers
+  ---
+  duration_ms: 13.459249
+  type: 'test'
+  ...
+# Subtest: help and mistakes survive reload and terminal write is atomic/idempotent
+ok 90 - help and mistakes survive reload and terminal write is atomic/idempotent
+  ---
+  duration_ms: 4.076068
+  type: 'test'
+  ...
+# Subtest: clean interruption does not acquire assistance
+ok 91 - clean interruption does not acquire assistance
+  ---
+  duration_ms: 1.719636
+  type: 'test'
+  ...
+# Subtest: import is union, duplicate safe, conflict rolls back whole transaction
+ok 92 - import is union, duplicate safe, conflict rolls back whole transaction
+  ---
+  duration_ms: 4.194302
+  type: 'test'
+  ...
+# Subtest: two tabs adding different events do not overwrite; no 500 event truncation
+ok 93 - two tabs adding different events do not overwrite; no 500 event truncation
+  ---
+  duration_ms: 40.121711
+  type: 'test'
+  ...
+# Subtest: cursor and ack update only after valid local merge
+ok 94 - cursor and ack update only after valid local merge
+  ---
+  duration_ms: 1.530768
+  type: 'test'
+  ...
+# Subtest: concurrent starts claim one durable attempt; parked help cannot be reset
+ok 95 - concurrent starts claim one durable attempt; parked help cannot be reset
+  ---
+  duration_ms: 2.145903
+  type: 'test'
+  ...
+# Subtest: server clock skew and invalid remote rows cannot stall cursor; imports stay strict
+ok 96 - server clock skew and invalid remote rows cannot stall cursor; imports stay strict
+  ---
+  duration_ms: 1.742563
+  type: 'test'
+  ...
+# Subtest: parked attempt adopts current review window but never clears help or mistakes
+ok 97 - parked attempt adopts current review window but never clears help or mistakes
+  ---
+  duration_ms: 1.384066
+  type: 'test'
+  ...
+# Subtest: offline errors keep outbox; valid and quarantined events both stop retrying
+ok 98 - offline errors keep outbox; valid and quarantined events both stop retrying
+  ---
+  duration_ms: 15.882868
+  type: 'test'
+  ...
+# Subtest: dirty during busy causes another flush and other account never receives history
+ok 99 - dirty during busy causes another flush and other account never receives history
+  ---
+  duration_ms: 5.459916
+  type: 'test'
+  ...
+# Subtest: account rebind requires explicit matching owner and preserves local journal
+ok 100 - account rebind requires explicit matching owner and preserves local journal
+  ---
+  duration_ms: 4.874306
+  type: 'test'
+  ...
+# Subtest: natural slight deviations and tremor are accepted without false rejection
+ok 101 - natural slight deviations and tremor are accepted without false rejection
+  ---
+  duration_ms: 1403.897084
+  type: 'test'
+  ...
+# Subtest: wrong stroke direction (reverse drawing) is rejected as mistake
+ok 102 - wrong stroke direction (reverse drawing) is rejected as mistake
+  ---
+  duration_ms: 1205.937726
+  type: 'test'
+  ...
+# Subtest: wrong stroke order is rejected on compound character
+ok 103 - wrong stroke order is rejected on compound character
+  ---
+  duration_ms: 1087.530434
+  type: 'test'
+  ...
+# Subtest: stationary click (tap) is not accepted as a stroke
+ok 104 - stationary click (tap) is not accepted as a stroke
+  ---
+  duration_ms: 1208.370015
+  type: 'test'
+  ...
+# Subtest: excessively short stroke (< 15% distance) is rejected as incomplete
+ok 105 - excessively short stroke (< 15% distance) is rejected as incomplete
+  ---
+  duration_ms: 1010.17265
+  type: 'test'
+  ...
+# Subtest: resizing canvas mid-exercise allows finishing remaining strokes cleanly
+ok 106 - resizing canvas mid-exercise allows finishing remaining strokes cleanly
+  ---
+  duration_ms: 1788.257854
+  type: 'test'
+  ...
+# Subtest: FSM Boundary: early answer (dueAt - 1ms) does not advance review stage, exact dueAt advances
+ok 107 - FSM Boundary: early answer (dueAt - 1ms) does not advance review stage, exact dueAt advances
+  ---
+  duration_ms: 1.837886
+  type: 'test'
+  ...
+# Subtest: FSM Long Absence: 180-day gap retains card in due queue, clean recall advances, mistake resets
+ok 108 - FSM Long Absence: 180-day gap retains card in due queue, clean recall advances, mistake resets
+  ---
+  duration_ms: 1.514279
+  type: 'test'
+  ...
+# Subtest: FSM Daily Limits: multiple reviews on the same calendar day do not artificially inflate successDays
+ok 109 - FSM Daily Limits: multiple reviews on the same calendar day do not artificially inflate successDays
+  ---
+  duration_ms: 0.283321
+  type: 'test'
+  ...
+# Subtest: FSM Midnight & Timezone: localDay format and cross-midnight boundary consistency
+ok 110 - FSM Midnight & Timezone: localDay format and cross-midnight boundary consistency
+  ---
+  duration_ms: 0.407013
+  type: 'test'
+  ...
+# Subtest: FSM Conflict Resolution: concurrent failure/assistance across devices wins over clean review within 5 minutes
+ok 111 - FSM Conflict Resolution: concurrent failure/assistance across devices wins over clean review within 5 minutes
+  ---
+  duration_ms: 0.296358
+  type: 'test'
+  ...
+# Subtest: FSM Idempotency: duplicate events and shuffled inputs produce strictly identical state
+ok 112 - FSM Idempotency: duplicate events and shuffled inputs produce strictly identical state
+  ---
+  duration_ms: 0.972569
+  type: 'test'
+  ...
+# Subtest: пиньинь режется по одному слогу на иероглиф
+ok 113 - пиньинь режется по одному слогу на иероглиф
+  ---
+  duration_ms: 2.719693
+  type: 'test'
+  ...
+# Subtest: апостроф официального пиньиня задаёт границу слога
+ok 114 - апостроф официального пиньиня задаёт границу слога
+  ---
+  duration_ms: 0.451291
+  type: 'test'
+  ...
+# Subtest: без апострофа слог не начинается с a/e/o
+ok 115 - без апострофа слог не начинается с a/e/o
+  ---
+  duration_ms: 0.27104
+  type: 'test'
+  ...
+# Subtest: эризация не съедает иероглиф 儿
+ok 116 - эризация не съедает иероглиф 儿
+  ---
+  duration_ms: 0.304441
+  type: 'test'
+  ...
+# Subtest: многозначные знаки читаются по слову, а не по умолчанию
+ok 117 - многозначные знаки читаются по слову, а не по умолчанию
+  ---
+  duration_ms: 0.19299
+  type: 'test'
+  ...
+# Subtest: разбор возвращает по записи на каждый иероглиф
+ok 118 - разбор возвращает по записи на каждый иероглиф
+  ---
+  duration_ms: 0.237185
+  type: 'test'
+  ...
+# Subtest: все слова словаря разбираются, и результат совпадает с эталоном Python
+ok 119 - все слова словаря разбираются, и результат совпадает с эталоном Python
+  ---
+  duration_ms: 99.063716
+  type: 'test'
+  ...
+# Subtest: иероглифы отделяются от прочих символов
+ok 120 - иероглифы отделяются от прочих символов
+  ---
+  duration_ms: 0.187954
+  type: 'test'
+  ...
+# Subtest: слияние берёт наибольшее число повторений по каждому знаку
+ok 121 - слияние берёт наибольшее число повторений по каждому знаку
+  ---
+  duration_ms: 0.671877
+  type: 'test'
+  ...
+# Subtest: дни занятий объединяются без дубликатов и по порядку
+ok 122 - дни занятий объединяются без дубликатов и по порядку
+  ---
+  duration_ms: 0.487805
+  type: 'test'
+  ...
+# Subtest: последняя сессия берётся из более свежего состояния
+ok 123 - последняя сессия берётся из более свежего состояния
+  ---
+  duration_ms: 0.2773
+  type: 'test'
+  ...
+# Subtest: слияние никогда не уменьшает счётчики
+ok 124 - слияние никогда не уменьшает счётчики
+  ---
+  duration_ms: 0.119658
+  type: 'test'
+  ...
+# Subtest: нормализация не теряет старую форму прогресса версии 1
+ok 125 - нормализация не теряет старую форму прогресса версии 1
+  ---
+  duration_ms: 0.134677
+  type: 'test'
+  ...
+# Subtest: знак засчитывается только после пяти написаний
+ok 126 - знак засчитывается только после пяти написаний
+  ---
+  duration_ms: 0.303329
+  type: 'test'
+  ...
+# Subtest: пустой прогресс имеет ожидаемую форму
+ok 127 - пустой прогресс имеет ожидаемую форму
+  ---
+  duration_ms: 0.077802
+  type: 'test'
+  ...
+1..127
+# tests 127
+# suites 0
+# pass 127
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 154031.128495
+exit 0
