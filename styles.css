@@ -92,7 +92,7 @@ button { -webkit-appearance: none; appearance: none; cursor: pointer; -webkit-us
 .head-button, .text-button, .mini-link { display: inline-flex; flex: none; align-items: center; min-height: 44px; padding: 0; color: var(--muted); border: 0; background: none; font-size: 11px; letter-spacing: .08em; white-space: nowrap; }
 .head-button:hover, .text-button:hover, .mini-link:hover { color: var(--text); }
 
-.eyebrow { margin-bottom: 13px; color: var(--red); font-size: 10px; letter-spacing: .19em; text-transform: uppercase; }
+.eyebrow { margin-bottom: 13px; color: var(--red-soft, #e4644c); font-size: 10px; font-weight: 500; letter-spacing: .19em; text-transform: uppercase; }
 h1 { margin: 0; font: 400 clamp(37px, 10vw, 50px)/1.02 Georgia, serif; letter-spacing: -.035em; }
 h1 em { color: #9ea3ad; font-weight: 400; }
 h2 { margin: 0 0 10px; font: 400 clamp(29px, 8vw, 38px)/1.08 Georgia, serif; letter-spacing: -.02em; }
@@ -835,6 +835,8 @@ body.sheet-open { overflow: hidden; }
 .mnemonic-parts { display:grid; gap:10px; margin:16px 0; }
 .mnemonic-across { grid-template-columns:repeat(2,minmax(0,1fr)); }
 .mnemonic-stack { grid-template-columns:1fr; }
+.mnemonic-surround { grid-template-columns:repeat(2,minmax(0,1fr)); }
+.mnemonic-observation { font-size:14px; line-height:1.55; color:var(--muted); margin:12px 0; }
 .mnemonic-part { display:flex; flex-direction:column; align-items:center; gap:6px; padding:12px; text-align:center; border-radius:8px; background:rgba(186,99,72,.10); border:1px solid #b97463; }
 .mnemonic-part-1 { border-color:#5e9b9a; background:rgba(68,136,135,.10); }
 .mnemonic-part-2 { border-color:#b3954d; background:rgba(172,141,63,.10); }

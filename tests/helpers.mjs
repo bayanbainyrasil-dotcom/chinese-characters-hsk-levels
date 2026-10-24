@@ -6,8 +6,34 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-export const STROKE_DATA_DIR = process.env.HANZI_DATA || "/tmp/hwd/package";
-export const CHROME = process.env.CHROME_PATH || "/opt/pw-browsers/chromium-1194/chrome-linux/chrome";
+function resolveChrome() {
+  if (process.env.CHROME_PATH) return process.env.CHROME_PATH;
+  const candidates = [
+    "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+    "/opt/pw-browsers/chromium-1194/chrome-linux/chrome",
+    "/usr/bin/google-chrome",
+    "/usr/bin/chromium-browser",
+  ];
+  for (const c of candidates) {
+    if (fs.existsSync(c)) return c;
+  }
+  return candidates[1];
+}
+
+function resolveStrokeDataDir() {
+  if (process.env.HANZI_DATA) return process.env.HANZI_DATA;
+  const candidates = [
+    "/tmp/hwd/package",
+    "/tmp/hanzi-memory-fixtures/package",
+  ];
+  for (const c of candidates) {
+    if (fs.existsSync(c)) return c;
+  }
+  return candidates[0];
+}
+
+export const STROKE_DATA_DIR = resolveStrokeDataDir();
+export const CHROME = resolveChrome();
 
 const MIME = {
   ".html": "text/html; charset=utf-8", ".js": "text/javascript; charset=utf-8",
@@ -34,7 +60,8 @@ export function startServer(port = 0) {
 }
 
 export async function launch(options = {}) {
-  return chromium.launch({ executablePath: CHROME, ...options });
+  const executablePath = options.executablePath || (fs.existsSync(CHROME) ? CHROME : undefined);
+  return chromium.launch({ executablePath, ...options });
 }
 
 /** Данные о чертах в контейнере недоступны из сети — отдаём их с диска. */

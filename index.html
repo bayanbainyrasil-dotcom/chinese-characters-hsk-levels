@@ -238,6 +238,10 @@
         <button class="secondary-button" id="restoreBackupButton" type="button">Восстановить из резервной копии</button>
         <button class="danger-button" id="resetProgressButton" type="button">Сбросить учебный прогресс</button>
       </div>
+      <div class="action-row two" style="margin-top: 10px;">
+        <button class="secondary-button" id="exportProgressButton" type="button">Скачать копию (.json)</button>
+        <label class="secondary-button file-button">Загрузить копию (.json)<input id="importProgressInput" type="file" accept="application/json,.json"></label>
+      </div>
     </section>
 
 
@@ -257,17 +261,19 @@
         <button class="primary-button google-button" id="authGoogle" type="button">
           <span class="google-mark" aria-hidden="true">G</span> Войти через Google
         </button>
-        <div class="form-grid">
-          <label><span class="field-label" for="authEmail">Электронная почта</span>
-            <input class="field" id="authEmail" type="email" autocomplete="email" placeholder="you@example.com"></label>
-          <label><span class="field-label" for="authPassword">Пароль</span>
-            <input class="field" id="authPassword" type="password" autocomplete="current-password" placeholder="Минимум 6 символов"></label>
-        </div>
-        <div class="action-row three">
-          <button class="secondary-button" id="authSignIn" type="button">Войти</button>
-          <button class="secondary-button" id="authSignUp" type="button">Регистрация</button>
-          <button class="secondary-button" id="authMagicLink" type="button">Ссылка на почту</button>
-        </div>
+        <form id="authForm" class="auth-form">
+          <div class="form-grid">
+            <label><span class="field-label" for="authEmail">Электронная почта</span>
+              <input class="field" id="authEmail" type="email" autocomplete="email" placeholder="you@example.com"></label>
+            <label><span class="field-label" for="authPassword">Пароль</span>
+              <input class="field" id="authPassword" type="password" autocomplete="current-password" placeholder="Минимум 6 символов"></label>
+          </div>
+          <div class="action-row three">
+            <button class="secondary-button" id="authSignIn" type="submit">Войти</button>
+            <button class="secondary-button" id="authSignUp" type="button">Регистрация</button>
+            <button class="secondary-button" id="authMagicLink" type="button">Ссылка на почту</button>
+          </div>
+        </form>
         <div class="form-message" id="authMessage"></div>
         <button class="text-button" id="authGuest" type="button">Продолжить без регистрации →</button>
       </div>

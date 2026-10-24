@@ -20,6 +20,21 @@ import { openWordCard, close as closeWordCard } from "./js/wordcard.js";
 
 const $ = (id) => document.getElementById(id);
 const VIEW_IDS = ["memoryView", "homeView", "verificationView", "rulesView", "radicalsView", "hskView", "practiceView", "progressView", "settingsView", "adminView"];
+const HASH_BY_VIEW = {
+  rulesView: "#rules",
+  radicalsView: "#radicals",
+  hskView: "#hsk",
+  progressView: "#progress",
+  settingsView: "#settings",
+  adminView: "#admin",
+  verificationView: "#verification",
+};
+const VIEW_BY_HASH = {
+  "": "homeView",
+  "#": "homeView",
+  "#home": "homeView",
+  ...Object.fromEntries(Object.entries(HASH_BY_VIEW).map(([k, v]) => [v, k])),
+};
 const DATA_VERSION = "hsk30-2026-official-pinyin-2";
 
 const STROKES = [
@@ -107,7 +122,7 @@ function saveProgress({ silent = false } = {}) {
   if (!silent) renderHomeProgress();
 }
 
-function showView(id) {
+function showView(id, { updateHash = true } = {}) {
   if (!VIEW_IDS.includes(id)) return;
   if (currentView === "memoryView" && id !== "memoryView") memory.leave();
   if (id === "memoryView" && currentView !== "memoryView") {
@@ -133,6 +148,28 @@ function showView(id) {
   if (id === "homeView") renderHomeProgress();
   if (id === "progressView") renderProgressView();
   if (id === "settingsView") renderSettings();
+  if (id === "rulesView") renderRules();
+  if (id === "radicalsView") { renderRadicalDays(); renderRadicals(); }
+  if (id === "hskView") renderHskLevels();
+  if (id === "verificationView") renderVerification();
+  if (id === "adminView") configureAdminGate();
+
+  if (updateHash && typeof window !== "undefined" && window.location) {
+    const targetHash = HASH_BY_VIEW[id];
+    if (targetHash && window.location.hash !== targetHash) {
+      try {
+        history.pushState({ view: id }, "", targetHash);
+      } catch (_) {
+        window.location.hash = targetHash;
+      }
+    } else if (id === "homeView" && window.location.hash) {
+      try {
+        history.pushState({ view: id }, "", window.location.pathname + window.location.search);
+      } catch (_) {
+        window.location.hash = "";
+      }
+    }
+  }
 }
 
 function showToast(message) {
@@ -1177,6 +1214,8 @@ function wireEvents() {
     progress = mergeProgress(progress, backup);
     saveProgress(); renderProgressView(); showToast("Прогресс восстановлен из резервной копии");
   });
+  $("exportProgressButton")?.addEventListener("click", exportBackup);
+  $("importProgressInput")?.addEventListener("change", (event) => importBackup(event.target.files?.[0]));
 
   $("adminGateForm").addEventListener("submit", submitAdminGate);
   $("adminLockButton").addEventListener("click", () => { admin.lockAdmin(); adminUnlocked = false; configureAdminGate(); });
@@ -1196,6 +1235,7 @@ function wireEvents() {
   }, { passive: true });
   // На iPhone и iPad рисование не должно прокручивать страницу.
   $("writingBoard").addEventListener("touchmove", (event) => event.preventDefault(), { passive: false });
+  $("memoryBoard")?.addEventListener("touchmove", (event) => event.preventDefault(), { passive: false });
   document.addEventListener("pointerdown", () => audio.unlockAudio(), { once: true, passive: true });
 
   document.querySelectorAll("[data-theme-option]").forEach((button) => {
@@ -1222,6 +1262,7 @@ function wireEvents() {
   });
   $("settingVolumeTest").addEventListener("click", () => { audio.unlockAudio(); audio.speak("你好"); });
 
+  $("authForm")?.addEventListener("submit", (e) => { e.preventDefault(); handleAuthAction("signin"); });
   $("authGoogle").addEventListener("click", () => handleAuthAction("google"));
   $("authSignIn").addEventListener("click", () => handleAuthAction("signin"));
   $("authSignUp").addEventListener("click", () => handleAuthAction("signup"));
@@ -1229,6 +1270,14 @@ function wireEvents() {
   $("authGuest").addEventListener("click", () => { showToast("Занимаемся без аккаунта — прогресс останется на этом устройстве"); showView("homeView"); });
   $("signOutButton").addEventListener("click", async () => { await sync.signOut(); renderSettings(); showToast("Выход выполнен, локальный прогресс на месте"); });
   $("syncBadge").addEventListener("click", () => { if (sync.status === "error") sync.syncNow(); });
+
+  window.addEventListener("popstate", () => {
+    const hash = window.location.hash;
+    const targetView = VIEW_BY_HASH[hash] || "homeView";
+    if (targetView !== currentView) {
+      showView(targetView, { updateHash: false });
+    }
+  });
 
   window.addEventListener("resize", handleViewportChange);
   window.addEventListener("orientationchange", () => setTimeout(handleViewportChange, 160));
@@ -1273,6 +1322,11 @@ async function init() {
 
   if ("serviceWorker" in navigator) {
     navigator.serviceWorker.register(`service-worker.js?v=${CONFIG.appVersion}`).catch(() => {});
+  }
+
+  const initialHash = typeof window !== "undefined" ? window.location.hash : "";
+  if (initialHash && VIEW_BY_HASH[initialHash] && VIEW_BY_HASH[initialHash] !== "homeView") {
+    showView(VIEW_BY_HASH[initialHash], { updateHash: false });
   }
 }
 
