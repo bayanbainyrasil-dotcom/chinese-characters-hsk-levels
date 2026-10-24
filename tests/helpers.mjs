@@ -1,5 +1,5 @@
 // Общая обвязка для e2e: локальный сервер, браузер и подмена данных о чертах.
-import { chromium } from "playwright";
+import { chromium, webkit, firefox } from "playwright";
 import http from "node:http";
 import fs from "node:fs";
 import path from "node:path";
@@ -59,7 +59,15 @@ export function startServer(port = 0) {
   });
 }
 
+/**
+ * По умолчанию Chromium. HSK_BROWSER=webkit или firefox запускает движок,
+ * установленный через `npx playwright install webkit|firefox` (CHROME_PATH
+ * тогда не используется). Эмуляция WebKit — не проверка настоящего Safari на iPad.
+ */
+export const BROWSER = process.env.HSK_BROWSER || "chromium";
 export async function launch(options = {}) {
+  if (BROWSER === "webkit") return webkit.launch(options);
+  if (BROWSER === "firefox") return firefox.launch(options);
   const executablePath = options.executablePath || (fs.existsSync(CHROME) ? CHROME : undefined);
   return chromium.launch({ executablePath, ...options });
 }
