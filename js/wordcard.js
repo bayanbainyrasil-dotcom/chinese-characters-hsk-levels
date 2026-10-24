@@ -16,6 +16,9 @@ let openState = null;
 let onCharacter = null;
 let onPractice = null;
 let pushedHistory = false;
+// Сколько popstate ждём от собственных history.back() при закрытии: событие приходит
+// асинхронно и не должно закрыть карточку, открытую сразу после закрытия.
+let pendingBacks = 0;
 let audioUnsubscribe = null;
 
 function build() {
@@ -88,6 +91,7 @@ function handleKeydown(event) {
 }
 
 function handlePopState(event) {
+  if (pendingBacks > 0) { pendingBacks -= 1; return; }
   if (!root?.hidden && (!event.state || event.state.sheet !== HISTORY_MARK)) {
     pushedHistory = false;
     close({ skipHistory: true });
@@ -243,6 +247,7 @@ export function close({ skipHistory = false } = {}) {
   openState = null;
   if (pushedHistory && !skipHistory) {
     pushedHistory = false;
+    pendingBacks += 1;
     history.back();
   }
   pushedHistory = false;

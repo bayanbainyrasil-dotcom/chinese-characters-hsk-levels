@@ -377,3 +377,24 @@ test("закрытое кнопкой упражнение не открывае
   assert.notEqual(await page.evaluate(() => document.body.dataset.view), "practiceView");
   await context.close();
 });
+
+test("история без пустых шагов: повторный показ раздела и выход из упражнения кнопкой", async () => {
+  const context = await browser.newContext();
+  await serveStrokeData(context);
+  await stubBackend(context);
+  const page = await context.newPage();
+  await page.goto(`${base}#progress`);
+  await page.waitForFunction(() => window.__hsk);
+  const len0 = await page.evaluate(() => history.length);
+  await page.evaluate(() => window.__hsk.showView("progressView"));
+  assert.equal(await page.evaluate(() => history.length), len0, "тот же раздел — без новой записи");
+  await page.evaluate(() => window.__hsk.showView("hskView"));
+  await page.evaluate(() => window.__hsk.startHskLevel("1-2"));
+  await page.locator("#writingBoard #hanziTarget svg").waitFor();
+  await page.locator("#practiceBackButton").click();
+  await page.waitForFunction(() => document.body.dataset.view === "hskView");
+  await page.goBack();
+  await page.waitForFunction(() => document.body.dataset.view !== "hskView");
+  assert.equal(await page.evaluate(() => document.body.dataset.view), "progressView", "один «Назад» — в предыдущий раздел");
+  await context.close();
+});

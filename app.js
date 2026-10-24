@@ -164,9 +164,14 @@ function showView(id, { updateHash = true } = {}) {
     const path = window.location.pathname + window.location.search;
     const url = HASH_BY_VIEW[id] || (id === "practiceView" ? window.location.href : path);
     const sameUrl = new URL(url, window.location.href).href === window.location.href;
+    // Заменяем, а не добавляем запись: на первой записи после загрузки (состояния
+    // ещё нет) и при выходе из упражнения кнопкой — иначе «Назад» тратится впустую.
+    const replace = (sameUrl && !history.state) || (previousView === "practiceView" && session?.closed);
     if (!sameUrl || history.state?.view !== id) {
       try {
-        history.pushState({ view: id }, "", url);
+        if (replace) history.replaceState({ view: id }, "", url);
+        else history.pushState({ view: id }, "", url);
+        if (id === "practiceView" && session) session.openedFrom = previousView;
       } catch (_) {
         if (HASH_BY_VIEW[id]) window.location.hash = HASH_BY_VIEW[id];
       }
@@ -1282,7 +1287,17 @@ function wireEvents() {
   }));
   $("startRulesButton").addEventListener("click", startRuleSession);
   $("startRadicalsButton").addEventListener("click", () => startRadicalSession(RADICALS.filter((item) => item.day === activeRadicalDay), `Ключи · день ${activeRadicalDay}`));
-  $("practiceBackButton").addEventListener("click", () => { try { writer?.cancelQuiz(); } catch (_) {} if (session) session.closed = true; showView(session?.returnView || "homeView"); if (session?.returnView === "hskView") renderHskLevels(); });
+  $("practiceBackButton").addEventListener("click", () => {
+    try { writer?.cancelQuiz(); } catch (_) {}
+    if (session) session.closed = true;
+    const target = session?.returnView || "homeView";
+    // Упражнение открыто прямо из этого раздела — возвращаемся шагом истории, без дубля записи.
+    if (session?.openedFrom === target && history.state?.view === "practiceView") {
+      history.back();
+      if (target === "hskView") renderHskLevels();
+      return;
+    }
+    showView(session?.returnView || "homeView"); if (session?.returnView === "hskView") renderHskLevels(); });
   $("animateButton").addEventListener("click", animateCurrentCharacter);
   $("retryButton").addEventListener("click", renderPracticeItem);
   $("skipButton").addEventListener("click", skipPracticeItem);
