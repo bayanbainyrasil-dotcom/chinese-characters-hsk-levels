@@ -19,7 +19,7 @@ export const CONFIG = {
   // Адрес файла предсказуем, поэтому его берут напрямую, без вызова функции.
   ttsBucket: "tts-audio",
 
-  appVersion: "20261019-1",
+  appVersion: "20261024-1",
 };
 
 export function backendReady() {
