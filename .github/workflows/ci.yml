@@ -5,12 +5,16 @@ on:
     branches: [ main ]
   pull_request:
     branches: [ main ]
+  workflow_dispatch:
 
 jobs:
   test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          # cross-version-e2e и pwa-update-e2e запускают старые версии из истории git
+          fetch-depth: 0
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -21,7 +25,7 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Install Playwright Browsers
+      - name: Install Playwright Chromium
         run: npx playwright install --with-deps chromium
 
       - name: Download stroke definitions
@@ -30,10 +34,28 @@ jobs:
           npm pack hanzi-writer-data@2.0.1
           tar -xzf hanzi-writer-data-2.0.1.tgz -C /tmp/hwd
 
-      - name: Run Test Suite (107 tests)
-        run: npm test
+      - name: Run test suite
+        # Chromium из Playwright, а не системный Chrome раннера.
+        run: |
+          export CHROME_PATH="$(node -e "console.log(require('playwright').chromium.executablePath())")"
+          npm test 2>&1 | tee test-results.tap
+          exit "${PIPESTATUS[0]}"
         env:
           HANZI_DATA: /tmp/hwd/package
 
-      - name: Run Lighthouse Audits
-        run: npm run lighthouse
+      - name: Run Lighthouse (report only)
+        if: always()
+        run: |
+          export CHROME_PATH="$(node -e "console.log(require('playwright').chromium.executablePath())")"
+          npm run lighthouse 2>&1 | tee lighthouse.txt
+
+      - name: Save results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: |
+            test-results.tap
+            lighthouse.txt
+            /tmp/lh-*.html
+          if-no-files-found: warn
