@@ -205,3 +205,34 @@ test("memoryBoard: уход из упражнения и возвращение 
   assert.deepEqual(errors, []);
   await context.close();
 });
+
+test("подсказка, нажатая перед последней чертой, не даёт засчитать самостоятельный успех", async () => {
+  const { context, page, errors } = await open(PORTRAIT);
+  await startExercise(page);
+  for (let i = 0; i < medians.length - 1; i += 1) await stroke(page, i);
+  // замедляем запись подсказки в IndexedDB, чтобы последняя черта и оценка успели раньше
+  await page.evaluate(() => {
+    const store = window.__hsk.memory.store;
+    const original = store.patchPending.bind(store);
+    store.patchPending = async (...args) => { await new Promise((r) => setTimeout(r, 800)); return original(...args); };
+  });
+  await page.locator("#memoryStoryHint").click();
+  await stroke(page, medians.length - 1);
+  await page.locator("#memoryGrade:not(.hidden)").waitFor({ timeout: 5000 });
+  if (await page.locator("#memoryGood").isEnabled()) await page.locator("#memoryGood").click({ timeout: 1000 }).catch(() => {});
+  await page.waitForFunction(() => window.__hsk.memory.pending?.assisted === true || document.getElementById("memoryNext").offsetParent !== null, null, { timeout: 5000 });
+  await page.waitForTimeout(900);
+  let saved = await answers(page);
+  assert.ok(saved.every((e) => e.assisted === true), `ни одного чистого успеха после подсказки: ${JSON.stringify(saved)}`);
+  if (!saved.length) {
+    assert.equal(await page.evaluate(() => window.__hsk.memory.pending.assisted), true);
+    assert.equal(await page.locator("#memoryGood").isDisabled(), true, "после записи подсказки «Вспомнил сам» заблокирована");
+    await page.locator("#memoryAgain").click();
+    await page.locator("#memoryNext:not(.hidden)").waitFor();
+    saved = await answers(page);
+  }
+  assert.equal(saved.length, 1);
+  assert.equal(saved[0].assisted, true);
+  assert.deepEqual(errors, []);
+  await context.close();
+});
