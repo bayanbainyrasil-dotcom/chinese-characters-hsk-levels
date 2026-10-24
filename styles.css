@@ -294,6 +294,8 @@ textarea.field { resize: vertical; }
 .admin-tools { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 104px), 1fr)); gap: 7px; margin: 15px 0 24px; }
 .file-button { position: relative; cursor: pointer; }
 .file-button input { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+/* Само поле файла невидимо — фокус с клавиатуры показываем на подписи-кнопке. */
+.file-button:focus-within { outline: 2px solid var(--red-soft); outline-offset: 2px; }
 .admin-results { margin-bottom: 16px; }
 .editor-card { margin: 17px 0; padding: 15px; border: 1px solid #4a3a35; background: #1d1918; }
 .editor-head { margin-bottom: 15px; }

@@ -313,3 +313,19 @@ test("Back/Forward: из упражнения — к списку уровней
   assert.equal((await state()).view, "homeView", "перезагрузка, как и раньше, ведёт на главную");
   await context.close();
 });
+
+test("кнопки загрузки копии показывают фокус клавиатуры", async () => {
+  const context = await browser.newContext();
+  await stubBackend(context);
+  const page = await context.newPage();
+  await page.goto(`${base}#progress`);
+  await page.waitForFunction(() => window.__hsk);
+  for (const [view, id] of [["progressView", "importProgressInput"], ["memoryView", "memoryImport"]]) {
+    await page.evaluate((v) => window.__hsk.showView(v), view);
+    await page.locator(`#${id}`).waitFor({ state: "attached" });
+    await page.waitForFunction((i) => document.getElementById(i).closest("label").offsetParent !== null, id);
+    const outline = await page.evaluate((i) => { const el = document.getElementById(i); el.focus(); const s = getComputedStyle(el.closest("label")); return `${s.outlineStyle} ${s.outlineWidth}`; }, id);
+    assert.notEqual(outline.split(" ")[0], "none", `${id}: виден фокус (${outline})`);
+  }
+  await context.close();
+});
