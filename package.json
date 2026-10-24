@@ -5,7 +5,7 @@
   "description": "Тренажёр китайских иероглифов HSK 3.0: письмо, озвучка, разбор слов и синхронизация прогресса",
   "type": "module",
   "scripts": {
-    "test": "node --test --test-concurrency=1 tests/unit.test.mjs tests/review-scheduler.test.mjs tests/review-store.test.mjs tests/review-sync.test.mjs tests/e2e.test.mjs tests/review-e2e.test.mjs tests/audio.test.mjs tests/mnemonic.test.mjs tests/mnemonic-e2e.test.mjs tests/audit-verification.test.mjs",
+    "test": "node --test --test-concurrency=1 tests/unit.test.mjs tests/review-scheduler.test.mjs tests/review-store.test.mjs tests/review-sync.test.mjs tests/e2e.test.mjs tests/review-e2e.test.mjs tests/audio.test.mjs tests/mnemonic.test.mjs tests/mnemonic-e2e.test.mjs tests/audit-verification.test.mjs tests/stroke-recognition.test.mjs tests/time-scheduler-fsm.test.mjs tests/migration-compatibility.test.mjs",
     "test:unit": "node --test tests/unit.test.mjs tests/review-scheduler.test.mjs tests/review-store.test.mjs tests/review-sync.test.mjs tests/mnemonic.test.mjs",
     "test:e2e": "node --test tests/e2e.test.mjs",
     "test:audio": "node --test tests/audio.test.mjs",
