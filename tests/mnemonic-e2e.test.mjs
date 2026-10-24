@@ -71,7 +71,7 @@ test('leaving and reopening during a delayed hint restores usable dashboard with
 });
 test('warmed offline reload retains mnemonic modules and renders the saved practice card',async()=>{
  const {context,page}=await open('好',false);await page.evaluate(()=>navigator.serviceWorker.ready);await page.waitForFunction(()=>navigator.serviceWorker.controller);
- const cached=await page.evaluate(async()=>{const c=await caches.open('bishun-shell-v24');return Promise.all(['mnemonic-ids','mnemonic-data','mnemonic-panel'].map(async name=>!!await c.match('js/'+name+'.js')));});assert.deepEqual(cached,[true,true,true]);
+ const cached=await page.evaluate(async()=>{const name=(await caches.keys()).find(k=>/^bishun-shell-v\d+$/.test(k));const c=await caches.open(name);return Promise.all(['mnemonic-ids','mnemonic-data','mnemonic-panel'].map(async name=>!!await c.match('js/'+name+'.js')));});assert.deepEqual(cached,[true,true,true]);
  await context.setOffline(true);await page.reload();await page.waitForFunction(()=>window.__hsk);await page.locator('#memoryOpen').click();await page.locator('#memoryResume').click();await page.locator('#mnemonicNote').waitFor();
  assert.deepEqual(await page.locator('.mnemonic-position').allTextContents(),['Слева','Справа']);await context.close();
 });
@@ -80,4 +80,19 @@ test('component panels fit desktop and preserve spatial labels',async()=>{
   const {context,page}=await open(char,false,1280);assert.deepEqual(await page.locator('.mnemonic-position').allTextContents(),labels);
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);await context.close();
  }
+});
+test('hint stages 1–2 never print the target character for any card (incl. observations)',async()=>{
+ const context=await browser.newContext();await stubBackend(context);const page=await context.newPage();
+ await page.goto(base);await page.waitForFunction(()=>window.__hsk);
+ const leaks=await page.evaluate(async()=>{const {MNEMONICS}=await import('./js/mnemonic-data.js');const {renderMnemonic}=await import('./js/mnemonic-panel.js');
+  const out=[];for(const char of Object.keys(MNEMONICS))for(const stage of [1,2]){const host=document.createElement('div');renderMnemonic(host,{char,stage,note:`заметка про ${char}`,onSave:()=>{}});if(host.textContent.includes(char))out.push(`${char}@${stage}`);}return out;});
+ assert.deepEqual(leaks,[]);await context.close();
+});
+test('parts hint for 安 in the real exercise keeps the comparison but hides 安',async()=>{
+ const {context,page}=await open('安');
+ await page.locator('#memoryStoryHint').click();await page.waitForFunction(()=>window.__hsk.memory.pending.hintStage===1);
+ await page.locator('#memoryPartsHint').click();await page.waitForFunction(()=>window.__hsk.memory.pending.hintStage===2);await partial(page,2);
+ const text=await page.locator('#memoryExercise').innerText();
+ assert.ok(text.includes('字'),'пояснение о похожем знаке показано');assert.ok(!text.includes('安'),`ответ не раскрыт: ${text}`);
+ await context.close();
 });

@@ -6,9 +6,9 @@ import { CONFIG, backendReady } from "./js/config.js";
 import {
   DEFAULT_SETTINGS, defaultProgress, loadProgress, saveProgress as persistProgress,
   merge as mergeProgress, normalize as normalizeProgress, todayKey,
-  masteredHsk, completedCount, migrationInfo, restoreBackup,
+  masteredHsk, completedCount, migrationInfo, restoreBackup, progressHealth, recoveryBundle,
 } from "./js/progress.js";
-import { KEYS, readJson, writeJson } from "./js/storage.js";
+import { KEYS, readJson, writeJson, readStoredRaw } from "./js/storage.js";
 import { createReviewSession } from "./js/review-session.js";
 import { supabaseClient } from "./js/sync.js";
 import { SyncEngine } from "./js/sync.js";
@@ -20,6 +20,21 @@ import { openWordCard, close as closeWordCard } from "./js/wordcard.js";
 
 const $ = (id) => document.getElementById(id);
 const VIEW_IDS = ["memoryView", "homeView", "verificationView", "rulesView", "radicalsView", "hskView", "practiceView", "progressView", "settingsView", "adminView"];
+const HASH_BY_VIEW = {
+  rulesView: "#rules",
+  radicalsView: "#radicals",
+  hskView: "#hsk",
+  progressView: "#progress",
+  settingsView: "#settings",
+  adminView: "#admin",
+  verificationView: "#verification",
+};
+const VIEW_BY_HASH = {
+  "": "homeView",
+  "#": "homeView",
+  "#home": "homeView",
+  ...Object.fromEntries(Object.entries(HASH_BY_VIEW).map(([k, v]) => [v, k])),
+};
 const DATA_VERSION = "hsk30-2026-official-pinyin-2";
 
 const STROKES = [
@@ -90,6 +105,7 @@ const sync = new SyncEngine({
   applyRemote: (merged) => {
     progress = merged;
     persistProgress(progress);
+    renderProgressAlert();
     applySettings(progress.settings, { persist: false });
     renderHomeProgress();
     if (currentView === "progressView") renderProgressView();
@@ -104,10 +120,11 @@ const memory = createReviewSession({ loadWriter: loadHanziWriter, getClient: sup
 
 function saveProgress({ silent = false } = {}) {
   persistProgress(progress);
+  renderProgressAlert();
   if (!silent) renderHomeProgress();
 }
 
-function showView(id) {
+function showView(id, { updateHash = true } = {}) {
   if (!VIEW_IDS.includes(id)) return;
   if (currentView === "memoryView" && id !== "memoryView") memory.leave();
   if (id === "memoryView" && currentView !== "memoryView") {
@@ -133,6 +150,33 @@ function showView(id) {
   if (id === "homeView") renderHomeProgress();
   if (id === "progressView") renderProgressView();
   if (id === "settingsView") renderSettings();
+  if (id === "rulesView") renderRules();
+  if (id === "radicalsView") { renderRadicalDays(); renderRadicals(); }
+  if (id === "hskView") renderHskLevels();
+  if (id === "verificationView") renderVerification();
+  if (id === "adminView") configureAdminGate();
+
+  if (updateHash && typeof window !== "undefined" && window.location) {
+    // Новая запись истории, если адрес или раздел текущей записи другой. Так
+    // «Назад» всегда ведёт в предыдущий открытый раздел, в том числе после
+    // выхода кнопкой приложения. У упражнения и памяти нет своего адреса:
+    // перезагрузка, как и раньше, ведёт на главную (память) или в список (упражнение).
+    const path = window.location.pathname + window.location.search;
+    const url = HASH_BY_VIEW[id] || (id === "practiceView" ? window.location.href : path);
+    const sameUrl = new URL(url, window.location.href).href === window.location.href;
+    // Заменяем, а не добавляем запись: на первой записи после загрузки (состояния
+    // ещё нет) и при выходе из упражнения кнопкой — иначе «Назад» тратится впустую.
+    const replace = (sameUrl && !history.state) || (previousView === "practiceView" && session?.closed);
+    if (!sameUrl || history.state?.view !== id) {
+      try {
+        if (replace) history.replaceState({ view: id }, "", url);
+        else history.pushState({ view: id }, "", url);
+        if (id === "practiceView" && session) session.openedFrom = previousView;
+      } catch (_) {
+        if (HASH_BY_VIEW[id]) window.location.hash = HASH_BY_VIEW[id];
+      }
+    }
+  }
 }
 
 function showToast(message) {
@@ -283,7 +327,7 @@ function completedForHskLevel(level) {
 function startSession(config) {
   const items = config.items.filter((item) => item?.char);
   if (!items.length) { showToast("В этом наборе пока нет упражнений"); return; }
-  session = { ...config, items, index: 0, repeatGoal: config.repeatGoal || 1 };
+  session = { ...config, items, index: 0, repeatGoal: config.repeatGoal || 1, closed: false };
   const bucket = progress.completed[session.bucket] || (progress.completed[session.bucket] = {});
   const firstIncomplete = items.findIndex((item) => Number(bucket[progressKeyFor(item)] || 0) < session.repeatGoal);
   session.index = firstIncomplete >= 0 ? firstIncomplete : 0;
@@ -1030,6 +1074,34 @@ function renderAdminChanges() {
   }
 }
 
+// --- повреждённая запись прогресса -------------------------------------------
+
+let progressAlertDismissed = false;
+
+function renderProgressAlert() {
+  const health = progressHealth();
+  const alert = $("progressAlert");
+  const critical = health.status === "unsaved" || health.status === "quarantined";
+  if (health.status === "unsaved") {
+    $("progressAlertTitle").textContent = "Прогресс сейчас не сохраняется";
+    $("progressAlertText").textContent = "Сохранённую запись прогресса не удалось прочитать, а сделать её аварийную копию не хватило места или доступа к хранилищу. Чтобы не стереть исходные данные, новые результаты пока держатся только до закрытия страницы. Скачайте файл восстановления и освободите место в браузере.";
+  } else if (health.status === "quarantined") {
+    $("progressAlertTitle").textContent = "Запись прогресса повреждена";
+    $("progressAlertText").textContent = "Сохранённую запись прогресса не удалось прочитать, поэтому занятия начаты с чистого листа. Исходная строка сохранена отдельно без изменений. Автоматически восстановить её нельзя, но файл можно скачать для ручного разбора. Резервная копия в разделе «Прогресс» не тронута.";
+  }
+  alert.classList.toggle("hidden", !critical || (progressAlertDismissed && health.status !== "unsaved"));
+  $("progressAlertDismiss").classList.toggle("hidden", health.status === "unsaved");
+  $("progressRecoveryBlock").classList.toggle("hidden", !health.copies && health.status !== "unsaved");
+}
+
+function downloadRecovery() {
+  const bundle = recoveryBundle();
+  const blob = new Blob([JSON.stringify(bundle, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a"); link.href = url; link.download = `bishun-recovery-${todayKey()}.json`; document.body.appendChild(link); link.click(); link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
 function exportBackup() {
   const backup = { schema: "bishun-backup-v1", createdAt: new Date().toISOString(), dataVersion: DATA_VERSION, edits: getAdminEdits(), progress };
   const blob = new Blob([JSON.stringify(backup, null, 2)], { type: "application/json" });
@@ -1039,16 +1111,61 @@ function exportBackup() {
   showToast("Резервная копия готова");
 }
 
-async function importBackup(file) {
+/**
+ * Проверяет файл копии целиком до любой записи. Смешанный файл (часть записей
+ * испорчена) отклоняется полностью: частичный импорт труднее заметить, чем отказ.
+ */
+function validateBackupFile(backup) {
+  const isPlainObject = (value) => Boolean(value) && typeof value === "object" && !Array.isArray(value);
+  if (!isPlainObject(backup) || backup.schema !== "bishun-backup-v1" || !Array.isArray(backup.edits)) throw new Error("schema");
+  for (const edit of backup.edits) {
+    if (!isPlainObject(edit)) throw new Error("edit");
+    if (!((typeof edit.id === "string" && edit.id) || Number.isFinite(edit.id))) throw new Error("edit id");
+  }
+  if (backup.progress !== undefined && backup.progress !== null) {
+    if (!isPlainObject(backup.progress)) throw new Error("progress");
+    const completed = backup.progress.completed;
+    if (completed !== undefined) {
+      if (!isPlainObject(completed)) throw new Error("completed");
+      for (const bucket of Object.values(completed)) {
+        if (!isPlainObject(bucket)) throw new Error("bucket");
+        for (const value of Object.values(bucket)) {
+          if (typeof value !== "number" || !Number.isFinite(value) || value < 0) throw new Error("count");
+        }
+      }
+    }
+  }
+  return backup;
+}
+
+async function importBackup(file, input) {
   if (!file) return;
   try {
-    const backup = JSON.parse(await file.text());
-    if (backup.schema !== "bishun-backup-v1" || !Array.isArray(backup.edits)) throw new Error("bad schema");
-    admin.saveLocalEdits(backup.edits);
-    if (backup.progress?.completed) {
-      // Импорт не затирает текущее: берём наибольшее по каждому знаку.
-      progress = mergeProgress(progress, backup.progress);
-      saveProgress();
+    let backup;
+    try { backup = validateBackupFile(JSON.parse(await file.text())); }
+    catch (_) { showToast("Это не резервная копия Chinese Characters · HSK Levels"); return; }
+
+    // Всё готовим в памяти, затем пишем: сначала прогресс (слияние по максимуму
+    // безопасно повторять), потом правки. Местные правки не затираются.
+    const nextEdits = admin.mergeEdits(admin.localEdits(), backup.edits);
+    const nextProgress = backup.progress?.completed ? mergeProgress(progress, backup.progress) : null;
+    if (nextProgress) {
+      persistProgress(nextProgress);
+      let stored = null;
+      try { stored = JSON.parse(readStoredRaw(KEYS.progress)); } catch (_) { stored = null; }
+      if (!stored || stored.updatedAt !== nextProgress.updatedAt) {
+        renderProgressAlert();
+        showToast("Не удалось сохранить прогресс из копии — данные на устройстве не изменены");
+        return;
+      }
+      progress = nextProgress;
+      renderHomeProgress();
+    }
+    if (!writeJson(KEYS.adminEdits, nextEdits)) {
+      showToast("Прогресс объединён, но правки словаря сохранить не удалось");
+      return;
+    }
+    if (nextProgress) {
       sync.enqueue({
         kind: "snapshot",
         completed: progress.completed,
@@ -1060,13 +1177,20 @@ async function importBackup(file) {
         lastChar: progress.lastChar,
         settings: progress.settings,
       });
+      applySettings(progress.settings, { persist: false });
+      if (currentView === "progressView") renderProgressView();
     }
     renderAdminChanges();
     showToast("Копия импортирована и объединена");
-  } catch (_) {
-    showToast("Это не резервная копия Chinese Characters · HSK Levels");
+  } catch (error) {
+    console.warn("Импорт копии прерван", error);
+    showToast("Импорт прерван. Проверьте раздел «Прогресс» и при необходимости повторите");
   } finally {
+    // Сбрасываем то поле, через которое пришёл файл, — иначе тот же файл
+    // нельзя выбрать повторно (браузер не пришлёт change).
+    if (input) input.value = "";
     $("importAdminInput").value = "";
+    $("importProgressInput").value = "";
   }
 }
 
@@ -1081,7 +1205,15 @@ function resumeLastSession() {
 
 // --- вход в аккаунт -------------------------------------------------------
 
+let authInFlight = false;
+
 async function handleAuthAction(action) {
+  if (authInFlight) return; // повторное нажатие, пока ждём сервер, не отправляет второй запрос
+  authInFlight = true;
+  try { await runAuthAction(action); } finally { authInFlight = false; }
+}
+
+async function runAuthAction(action) {
   const email = $("authEmail")?.value.trim();
   const password = $("authPassword")?.value;
   const message = $("authMessage");
@@ -1155,7 +1287,17 @@ function wireEvents() {
   }));
   $("startRulesButton").addEventListener("click", startRuleSession);
   $("startRadicalsButton").addEventListener("click", () => startRadicalSession(RADICALS.filter((item) => item.day === activeRadicalDay), `Ключи · день ${activeRadicalDay}`));
-  $("practiceBackButton").addEventListener("click", () => { try { writer?.cancelQuiz(); } catch (_) {} showView(session?.returnView || "homeView"); if (session?.returnView === "hskView") renderHskLevels(); });
+  $("practiceBackButton").addEventListener("click", () => {
+    try { writer?.cancelQuiz(); } catch (_) {}
+    if (session) session.closed = true;
+    const target = session?.returnView || "homeView";
+    // Упражнение открыто прямо из этого раздела — возвращаемся шагом истории, без дубля записи.
+    if (session?.openedFrom === target && history.state?.view === "practiceView") {
+      history.back();
+      if (target === "hskView") renderHskLevels();
+      return;
+    }
+    showView(session?.returnView || "homeView"); if (session?.returnView === "hskView") renderHskLevels(); });
   $("animateButton").addEventListener("click", animateCurrentCharacter);
   $("retryButton").addEventListener("click", renderPracticeItem);
   $("skipButton").addEventListener("click", skipPracticeItem);
@@ -1177,6 +1319,11 @@ function wireEvents() {
     progress = mergeProgress(progress, backup);
     saveProgress(); renderProgressView(); showToast("Прогресс восстановлен из резервной копии");
   });
+  $("exportProgressButton")?.addEventListener("click", exportBackup);
+  $("progressRecoveryDownload").addEventListener("click", downloadRecovery);
+  $("progressRecoveryDownloadAlt").addEventListener("click", downloadRecovery);
+  $("progressAlertDismiss").addEventListener("click", () => { progressAlertDismissed = true; renderProgressAlert(); });
+  $("importProgressInput")?.addEventListener("change", (event) => importBackup(event.target.files?.[0], event.target));
 
   $("adminGateForm").addEventListener("submit", submitAdminGate);
   $("adminLockButton").addEventListener("click", () => { admin.lockAdmin(); adminUnlocked = false; configureAdminGate(); });
@@ -1196,6 +1343,7 @@ function wireEvents() {
   }, { passive: true });
   // На iPhone и iPad рисование не должно прокручивать страницу.
   $("writingBoard").addEventListener("touchmove", (event) => event.preventDefault(), { passive: false });
+  $("memoryBoard")?.addEventListener("touchmove", (event) => event.preventDefault(), { passive: false });
   document.addEventListener("pointerdown", () => audio.unlockAudio(), { once: true, passive: true });
 
   document.querySelectorAll("[data-theme-option]").forEach((button) => {
@@ -1222,13 +1370,27 @@ function wireEvents() {
   });
   $("settingVolumeTest").addEventListener("click", () => { audio.unlockAudio(); audio.speak("你好"); });
 
+  $("authForm")?.addEventListener("submit", (e) => { e.preventDefault(); handleAuthAction("signin"); });
   $("authGoogle").addEventListener("click", () => handleAuthAction("google"));
-  $("authSignIn").addEventListener("click", () => handleAuthAction("signin"));
+  // «Войти» — кнопка отправки формы: её клик и Enter приходят одним событием submit.
   $("authSignUp").addEventListener("click", () => handleAuthAction("signup"));
   $("authMagicLink").addEventListener("click", () => handleAuthAction("link"));
   $("authGuest").addEventListener("click", () => { showToast("Занимаемся без аккаунта — прогресс останется на этом устройстве"); showView("homeView"); });
   $("signOutButton").addEventListener("click", async () => { await sync.signOut(); renderSettings(); showToast("Выход выполнен, локальный прогресс на месте"); });
   $("syncBadge").addEventListener("click", () => { if (sync.status === "error") sync.syncNow(); });
+
+  const handleLocationRoute = () => {
+    const hash = window.location.hash;
+    let targetView = VIEW_BY_HASH[hash] || "homeView";
+    // В упражнение «Назад/Вперёд» возвращают, только если его не закрыли кнопкой.
+    if (history.state?.view === "practiceView" && session && !session.closed) targetView = "practiceView";
+    if (history.state?.view === "memoryView" && !hash) targetView = "memoryView";
+    if (targetView !== currentView) {
+      showView(targetView, { updateHash: false });
+    }
+  };
+  window.addEventListener("popstate", handleLocationRoute);
+  window.addEventListener("hashchange", handleLocationRoute);
 
   window.addEventListener("resize", handleViewportChange);
   window.addEventListener("orientationchange", () => setTimeout(handleViewportChange, 160));
@@ -1255,6 +1417,7 @@ async function init() {
   wireEvents();
   observeBoard();
   renderHomeProgress();
+  renderProgressAlert();
   renderRadicalDays();
   renderRadicals();
   renderRules();
@@ -1273,6 +1436,13 @@ async function init() {
 
   if ("serviceWorker" in navigator) {
     navigator.serviceWorker.register(`service-worker.js?v=${CONFIG.appVersion}`).catch(() => {});
+  }
+
+  const initialHash = typeof window !== "undefined" ? window.location.hash : "";
+  if (initialHash && VIEW_BY_HASH[initialHash] && VIEW_BY_HASH[initialHash] !== "homeView") {
+    showView(VIEW_BY_HASH[initialHash], { updateHash: false });
+  } else {
+    document.body.dataset.view = "homeView";
   }
 }
 

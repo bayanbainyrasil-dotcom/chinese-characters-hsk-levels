@@ -1,13 +1,39 @@
 // Общая обвязка для e2e: локальный сервер, браузер и подмена данных о чертах.
-import { chromium } from "playwright";
+import { chromium, webkit, firefox } from "playwright";
 import http from "node:http";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-export const STROKE_DATA_DIR = process.env.HANZI_DATA || "/tmp/hwd/package";
-export const CHROME = process.env.CHROME_PATH || "/opt/pw-browsers/chromium-1194/chrome-linux/chrome";
+function resolveChrome() {
+  if (process.env.CHROME_PATH) return process.env.CHROME_PATH;
+  const candidates = [
+    "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+    "/opt/pw-browsers/chromium-1194/chrome-linux/chrome",
+    "/usr/bin/google-chrome",
+    "/usr/bin/chromium-browser",
+  ];
+  for (const c of candidates) {
+    if (fs.existsSync(c)) return c;
+  }
+  return candidates[1];
+}
+
+function resolveStrokeDataDir() {
+  if (process.env.HANZI_DATA) return process.env.HANZI_DATA;
+  const candidates = [
+    "/tmp/hwd/package",
+    "/tmp/hanzi-memory-fixtures/package",
+  ];
+  for (const c of candidates) {
+    if (fs.existsSync(c)) return c;
+  }
+  return candidates[0];
+}
+
+export const STROKE_DATA_DIR = resolveStrokeDataDir();
+export const CHROME = resolveChrome();
 
 const MIME = {
   ".html": "text/html; charset=utf-8", ".js": "text/javascript; charset=utf-8",
@@ -33,8 +59,17 @@ export function startServer(port = 0) {
   });
 }
 
+/**
+ * По умолчанию Chromium. HSK_BROWSER=webkit или firefox запускает движок,
+ * установленный через `npx playwright install webkit|firefox` (CHROME_PATH
+ * тогда не используется). Эмуляция WebKit — не проверка настоящего Safari на iPad.
+ */
+export const BROWSER = process.env.HSK_BROWSER || "chromium";
 export async function launch(options = {}) {
-  return chromium.launch({ executablePath: CHROME, ...options });
+  if (BROWSER === "webkit") return webkit.launch(options);
+  if (BROWSER === "firefox") return firefox.launch(options);
+  const executablePath = options.executablePath || (fs.existsSync(CHROME) ? CHROME : undefined);
+  return chromium.launch({ executablePath, ...options });
 }
 
 /** Данные о чертах в контейнере недоступны из сети — отдаём их с диска. */

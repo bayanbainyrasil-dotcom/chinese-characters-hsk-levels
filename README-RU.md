@@ -112,7 +112,7 @@ HSK 1–2, до пяти новых знаков в день, простые ф�
 (тот же источник, который использует встроенный Hanzi Writer). Число черт
 описывает форму, личная трудность определяется результатами проверок.
 
-Новые тесты: `npm run test:review`. Для браузерных тестов задайте `CHROME_PATH`
+Новые тесты: `npm run test:review`. Другой движок: `HSK_BROWSER=webkit` (после `npx playwright install webkit`). Для браузерных тестов задайте `CHROME_PATH`
 и `HANZI_DATA` на установленный Chrome и распакованный hanzi-writer-data 2.0.1.
 Миграция сервера 0002 и перенос данных описаны в docs/supabase-setup.md и
 docs/progress-migration.md. До обновления сервера расписание сохраняется на

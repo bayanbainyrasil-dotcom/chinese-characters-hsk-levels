@@ -16,7 +16,8 @@ export function renderMnemonic(host,{char,stage,note='',onSave}) {
         tile.append(element('span',part.position,'mnemonic-position'),element('strong',part.glyph,'mnemonic-glyph'),element('span',part.name));diagram.append(tile);
       });host.append(diagram);
       const source=element('a','Источник структуры: Make Me a Hanzi');source.href='https://github.com/skishore/makemeahanzi';source.target='_blank';source.rel='noopener noreferrer';host.append(source);
-    }else host.append(element('p',entry.observation,'mnemonic-observation'));
+    }
+    if(entry.observation) host.append(element('p',stage<3?maskTarget(entry.observation,char):entry.observation,'mnemonic-observation'));
   }
   if(stage>=3){
     const label=element('label','Моя ассоциация (до 500 символов)');
