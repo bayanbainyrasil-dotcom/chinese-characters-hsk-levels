@@ -1271,13 +1271,15 @@ function wireEvents() {
   $("signOutButton").addEventListener("click", async () => { await sync.signOut(); renderSettings(); showToast("Выход выполнен, локальный прогресс на месте"); });
   $("syncBadge").addEventListener("click", () => { if (sync.status === "error") sync.syncNow(); });
 
-  window.addEventListener("popstate", () => {
+  const handleLocationRoute = () => {
     const hash = window.location.hash;
     const targetView = VIEW_BY_HASH[hash] || "homeView";
     if (targetView !== currentView) {
       showView(targetView, { updateHash: false });
     }
-  });
+  };
+  window.addEventListener("popstate", handleLocationRoute);
+  window.addEventListener("hashchange", handleLocationRoute);
 
   window.addEventListener("resize", handleViewportChange);
   window.addEventListener("orientationchange", () => setTimeout(handleViewportChange, 160));
@@ -1327,6 +1329,8 @@ async function init() {
   const initialHash = typeof window !== "undefined" ? window.location.hash : "";
   if (initialHash && VIEW_BY_HASH[initialHash] && VIEW_BY_HASH[initialHash] !== "homeView") {
     showView(VIEW_BY_HASH[initialHash], { updateHash: false });
+  } else {
+    document.body.dataset.view = "homeView";
   }
 }
 

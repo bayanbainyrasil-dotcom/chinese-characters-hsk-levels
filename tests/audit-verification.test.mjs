@@ -139,3 +139,120 @@ test("memoryBoard prevents touch scrolling and mnemonic panel displays similar c
 
   await context.close();
 });
+
+test("deep verification: all hash routes, unknown hash fallback, reload, and outside touch scroll", async () => {
+  const context = await browser.newContext();
+  await serveStrokeData(context);
+  await stubBackend(context);
+  const page = await context.newPage();
+
+  const hashes = ["#rules", "#radicals", "#hsk", "#progress", "#settings", "#admin", "#verification"];
+  const viewMap = {
+    "#rules": "#rulesView",
+    "#radicals": "#radicalsView",
+    "#hsk": "#hskView",
+    "#progress": "#progressView",
+    "#settings": "#settingsView",
+    "#admin": "#adminView",
+    "#verification": "#verificationView",
+  };
+
+  // 1. Прямое открытие каждого маршрута
+  for (const hash of hashes) {
+    await page.goto(`${base}${hash}`);
+    await page.waitForFunction(() => window.__hsk);
+    const viewSelector = viewMap[hash];
+    assert.equal(await page.locator(viewSelector).isVisible(), true, `Direct open of ${hash} should show ${viewSelector}`);
+    assert.equal(await page.locator("#homeView").isVisible(), false, `Direct open of ${hash} should hide homeView`);
+  }
+
+  // 2. Обновление страницы (reload) на #rulesView сохраняет #rulesView
+  await page.goto(`${base}#rules`);
+  await page.waitForFunction(() => window.__hsk);
+  await page.reload();
+  await page.waitForFunction(() => window.__hsk);
+  assert.equal(await page.locator("#rulesView").isVisible(), true, "Page reload on #rules must keep rulesView visible");
+  assert.equal(await page.locator("#homeView").isVisible(), false);
+
+  // 3. Неизвестный хеш (#unknown-404) грациозно возвращает на homeView
+  await page.evaluate(() => { window.location.hash = "#unknown-hash-404"; });
+  await page.waitForFunction(() => !document.getElementById("homeView").classList.contains("hidden"));
+  assert.equal(await page.locator("#homeView").isVisible(), true, "Unknown hash must fall back to homeView");
+  assert.equal(await page.locator("#rulesView").isVisible(), false);
+
+  // 4. Проверка скролла: вне холста touchmove НЕ блокируется, внутри холста touchmove блокируется
+  const scrollResults = await page.evaluate(() => {
+    const memoryBoard = document.getElementById("memoryBoard");
+    const writingBoard = document.getElementById("writingBoard");
+    const body = document.body;
+
+    const mkTouch = () => new TouchEvent("touchmove", { cancelable: true, bubbles: true });
+
+    const evBody = mkTouch();
+    body.dispatchEvent(evBody);
+
+    const evWriting = mkTouch();
+    writingBoard.dispatchEvent(evWriting);
+
+    const evMemory = mkTouch();
+    memoryBoard.dispatchEvent(evMemory);
+
+    return {
+      bodyPrevented: evBody.defaultPrevented,
+      writingPrevented: evWriting.defaultPrevented,
+      memoryPrevented: evMemory.defaultPrevented
+    };
+  });
+
+  assert.equal(scrollResults.bodyPrevented, false, "Outside touchmove must NOT be prevented (normal scroll allowed)");
+  assert.equal(scrollResults.writingPrevented, true, "WritingBoard touchmove must be prevented");
+  assert.equal(scrollResults.memoryPrevented, true, "MemoryBoard touchmove must be prevented");
+
+  await context.close();
+});
+
+test("deep verification: hint disclosure protection and assisted attempt lock", async () => {
+  const context = await browser.newContext();
+  await serveStrokeData(context);
+  await stubBackend(context);
+
+  const data = JSON.parse(fs.readFileSync(new URL("../data/writing.json", import.meta.url)));
+  const row = Object.values(data.groups).flat().find((r) => r.char === "安");
+  await context.route("**/data/writing.json", (r) => r.fulfill({ json: { ...data, groups: { "1-2": [row] } } }));
+
+  const page = await context.newPage();
+  await page.addInitScript(() => {
+    localStorage.setItem("bishun_hsk30_progress_v1", JSON.stringify({ completed: { hsk: { "1-2:安": 5 } } }));
+  });
+
+  await page.goto(base);
+  await page.waitForFunction(() => window.__hsk);
+
+  await page.locator("#memoryOpen").click();
+  await page.locator("#memoryStart").click();
+  await page.locator("#memoryHelp:not([disabled])").waitFor();
+
+  // На этапе 0: целевой иероглиф скрыт из поля подсказок и контекста
+  const cue = await page.locator("#memoryCue").textContent();
+  const contextText = await page.locator("#memoryContext").textContent();
+  const answerHidden = await page.locator("#memoryAnswer").isHidden();
+
+  assert.doesNotMatch(cue, /安/, "Target character 安 must not be disclosed in cue");
+  assert.doesNotMatch(contextText, /安/, "Target character 安 must not be disclosed in context");
+  assert.equal(answerHidden, true, "Answer card must remain hidden at stage 0");
+
+  // Запрашиваем подсказку 1 (сюжет)
+  await page.locator("#memoryStoryHint").click();
+  await page.waitForFunction(() => window.__hsk.memory.pending.hintStage >= 1);
+  assert.equal(await page.evaluate(() => window.__hsk.memory.pending.assisted), true, "Requesting hint must mark assisted = true");
+
+  // Запрашиваем подсказку 2 (компоненты)
+  await page.locator("#memoryPartsHint").click();
+  await page.waitForFunction(() => window.__hsk.memory.pending.hintStage >= 2);
+
+  // Иероглиф 安 по-прежнему не раскрыт в #memoryAnswer
+  assert.equal(await page.locator("#memoryAnswer").isHidden(), true, "Character answer must still be hidden at stage 2");
+
+  await context.close();
+});
+
