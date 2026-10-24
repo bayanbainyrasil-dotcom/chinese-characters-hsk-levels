@@ -169,6 +169,12 @@ function showView(id, { updateHash = true } = {}) {
       } catch (_) {
         window.location.hash = "";
       }
+    } else if ((id === "practiceView" || id === "memoryView") && history.state?.view !== id) {
+      // У упражнения и раздела памяти нет своего адреса (перезагрузка, как и
+      // раньше, ведёт на главную), но «Назад» должен вернуть туда, откуда они
+      // открыты, а не на шаг раньше.
+      const url = id === "memoryView" ? window.location.pathname + window.location.search : window.location.href;
+      try { history.pushState({ view: id }, "", url); } catch (_) { /* старые браузеры */ }
     }
   }
 }
@@ -1361,7 +1367,9 @@ function wireEvents() {
 
   const handleLocationRoute = () => {
     const hash = window.location.hash;
-    const targetView = VIEW_BY_HASH[hash] || "homeView";
+    let targetView = VIEW_BY_HASH[hash] || "homeView";
+    if (history.state?.view === "practiceView" && session) targetView = "practiceView";
+    if (history.state?.view === "memoryView" && !hash) targetView = "memoryView";
     if (targetView !== currentView) {
       showView(targetView, { updateHash: false });
     }

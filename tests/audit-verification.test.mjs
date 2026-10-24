@@ -278,3 +278,38 @@ test("sign-in sends exactly one request per click and per Enter", async () => {
   assert.equal(hits.length, 1, "Enter — один запрос");
   await context.close();
 });
+
+test("Back/Forward: из упражнения — к списку уровней, из памяти — на главную; упражнение продолжается", async () => {
+  const context = await browser.newContext();
+  await serveStrokeData(context);
+  await stubBackend(context);
+  const page = await context.newPage();
+  const state = () => page.evaluate(() => ({ hash: location.hash, view: document.body.dataset.view }));
+  await page.goto(base);
+  await page.waitForFunction(() => window.__hsk);
+  await page.evaluate(() => window.__hsk.showView("hskView"));
+  await page.evaluate(() => window.__hsk.startHskLevel("1-2"));
+  await page.locator("#writingBoard #hanziTarget svg").waitFor();
+  assert.deepEqual(await state(), { hash: "#hsk", view: "practiceView" });
+  await page.goBack();
+  await page.waitForFunction(() => document.body.dataset.view === "hskView");
+  await page.goForward();
+  await page.waitForFunction(() => document.body.dataset.view === "practiceView");
+  // упражнение после «Вперёд» рабочее: знак дописывается и засчитывается
+  await page.evaluate(() => window.__hsk.completeCurrentItem(0));
+  assert.equal(await page.evaluate(() => window.__hsk.progress.attempts), 1);
+
+  await page.evaluate(() => window.__hsk.showView("homeView"));
+  await page.locator("#memoryOpen").click();
+  await page.waitForFunction(() => document.body.dataset.view === "memoryView");
+  await page.goBack();
+  await page.waitForFunction(() => document.body.dataset.view === "homeView");
+  assert.deepEqual(await state(), { hash: "", view: "homeView" });
+  await page.goForward();
+  await page.waitForFunction(() => document.body.dataset.view === "memoryView");
+  await page.locator("#memoryStart").waitFor({ state: "visible" });
+  await page.reload();
+  await page.waitForFunction(() => window.__hsk);
+  assert.equal((await state()).view, "homeView", "перезагрузка, как и раньше, ведёт на главную");
+  await context.close();
+});
